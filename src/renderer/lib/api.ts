@@ -1,26 +1,24 @@
 import type { Api } from '../../shared/api';
-import { ApiErro, type MudancaCofre } from '../../shared/types';
+import type { Bridge } from '../../shared/ipc';
+import { ApiError } from '../../shared/types';
 
 declare global {
   interface Window {
-    ponte: {
-      chamar(nome: string, args: unknown[]): Promise<{ ok: boolean; valor?: unknown; erro?: { codigo: string; mensagem: string; dados?: unknown } }>;
-      aoMudar(cb: (m: MudancaCofre) => void): () => void;
-      aoCapturar(cb: () => void): () => void;
-    };
+    bridge: Bridge;
   }
 }
 
+/** Typed client for the main process: `api.listBoards(id)` becomes one IPC call. */
 export const api: Api = new Proxy({} as Api, {
-  get: (_t, nome) => {
-    if (typeof nome !== 'string') return undefined;
+  get: (_target, method) => {
+    if (typeof method !== 'string') return undefined;
     return async (...args: unknown[]) => {
-      const r = await window.ponte.chamar(nome, args);
-      if (r.ok) return r.valor;
-      throw new ApiErro(r.erro!.codigo, r.erro!.mensagem, r.erro!.dados);
+      const result = await window.bridge.invoke(method, args);
+      if (result.ok) return result.value;
+      throw new ApiError(result.error.code, result.error.message, result.error.data);
     };
   }
 });
 
-export const mensagemDe = (e: unknown): string => (e instanceof Error ? e.message : String(e));
-export const eConflito = (e: unknown): e is ApiErro => e instanceof ApiErro && e.codigo === 'conflito';
+export const errorMessage = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+export const isConflict = (e: unknown): e is ApiError => e instanceof ApiError && e.code === 'conflict';
