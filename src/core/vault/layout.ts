@@ -7,6 +7,10 @@ export const BOARDS_DIR = 'Boards';
 export const BOARD_FILE = '_board.md';
 export const TRASH_DIR = '.trash';
 export const ATTACHMENTS_DIR = '_attachments';
+/** One Markdown file per person with their absences and yearly vacation allowance. */
+export const TIME_OFF_DIR = 'Time off';
+/** 1:1 notes: one folder per person, one file per meeting. Usually kept in a personal vault. */
+export const ONE_ON_ONES_DIR = 'One-on-ones';
 
 /** Names used by vaults created before v0.2 (Portuguese). Only read by the migration. */
 export const LEGACY = {

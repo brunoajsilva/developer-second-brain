@@ -24,6 +24,8 @@ import { CommandPalette, type PaletteTarget } from '../features/search/CommandPa
 import { ConflictsView } from '../features/conflicts/ConflictsView';
 import { QuickCapture } from '../features/capture/QuickCapture';
 import { TOOLS, findTool } from '../features/tools/registry';
+import { TimeOffView } from '../features/time-off/TimeOffView';
+import { PeopleView } from '../features/people/PeopleView';
 
 const SIDEBAR_KEY = 'secondbrain.sidebarCollapsed';
 const readCollapsed = () => { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch { return false; } };
@@ -98,6 +100,8 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
   const [palette, setPalette] = useState(false);
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const { data, reload, openCountByBoard, collectionOf, collections } = useVaultData(vault.id, tick);
+  const failureKey = data?.failures.join('|') ?? '';
+  useEffect(() => { if (failureKey) toast(`Could not load ${failureKey.split('|').join('; ')}`, 'error'); }, [failureKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // reload (debounced) when files change on disk
   useEffect(() => {
@@ -162,6 +166,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
   const workspace: Workspace = useMemo(() => ({
     vault, vaults, settings, data, tick,
     reload: () => setTick((n) => n + 1),
+    refreshSettings: onSettingsChanged,
     go, openCard, openDoc, openLink, collectionOf,
     dialogs: {
       newBoard: () => setDialog({ kind: 'new-board' }),
@@ -177,6 +182,13 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
   const crumbs: Crumb[] = [{ label: vault.name, onClick: () => go({ kind: 'today' }) }];
   if (view.kind === 'today') crumbs.push({ label: 'Today' });
   if (view.kind === 'conflicts') crumbs.push({ label: 'Sync conflicts' });
+  if (view.kind === 'time-off') crumbs.push({ label: 'Team' }, { label: 'Time off' });
+  if (view.kind === 'people') {
+    crumbs.push({ label: 'Team' }, { label: 'People', onClick: () => go({ kind: 'people' }) });
+    if (view.person) crumbs.push({ label: view.person, onClick: () => go({ kind: 'people', person: view.person }) });
+    if (view.meeting) crumbs.push({ label: `1:1 ${view.meeting.slice(0, 10)}` });
+    if (view.review) crumbs.push({ label: view.review });
+  }
   if (view.kind === 'tool') crumbs.push({ label: 'Tools' }, { label: findTool(view.toolId)?.name ?? view.toolId });
   if (view.kind === 'board') crumbs.push({ label: 'Boards' }, { label: currentBoard?.name ?? view.boardId });
   if (view.kind === 'docs') {
@@ -211,6 +223,8 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     { label: 'New board', run: () => setDialog({ kind: 'new-board' }) },
     { label: 'New collection', run: () => setDialog({ kind: 'new-collection' }) },
     { label: 'Go to Today', run: () => go({ kind: 'today' }) },
+    { label: 'Go to People (1:1s, feedback and reviews)', keywords: ['1:1', 'one on one', 'feedback', 'people', 'manager', 'review', 'performance'], run: () => go({ kind: 'people' }) },
+    { label: 'Go to Time off', keywords: ['vacation', 'holiday', 'leave', 'férias', 'absence', 'calendar'], run: () => go({ kind: 'time-off' }) },
     ...TOOLS.map((t) => ({ label: `Open ${t.name}`, keywords: t.keywords, run: () => go({ kind: 'tool', toolId: t.id }) })),
     { label: 'Switch vault', run: onSwitchVault },
     { label: collapsed ? 'Expand sidebar' : 'Collapse sidebar', run: toggleSidebar }
@@ -231,6 +245,8 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
                 {view.kind === 'board' && <BoardView boardId={view.boardId} cardId={view.cardId} onOpenSettings={() => setDialog({ kind: 'board-settings', boardId: view.boardId })} />}
                 {view.kind === 'docs' && <DocsView collection={view.collection} path={view.path} onNewPage={(parent) => setDialog({ kind: 'new-page', parent })} />}
                 {view.kind === 'conflicts' && <ConflictsView />}
+                {view.kind === 'time-off' && <TimeOffView />}
+                {view.kind === 'people' && <PeopleView person={view.person} meeting={view.meeting} review={view.review} tab={view.tab} />}
                 {view.kind === 'tool' && <ToolScreen toolId={view.toolId} />}
               </motion.div>
             </AnimatePresence>

@@ -1,5 +1,5 @@
 import type {
-  Backlink, Board, Card, CardInput, Column, ConflictCopy, DocFile, DocSummary, ItemKind, OpenFolderResult, SearchResult, Settings, VaultInfo
+  Backlink, Board, Card, CardInput, Column, ConflictCopy, DocFile, DocSummary, ItemKind, OpenFolderResult, FeedbackEntry, OneOnOnePerson, SearchResult, Settings, TimeOffEntry, TimeOffPerson, VaultInfo
 } from './types';
 
 /**
@@ -12,6 +12,7 @@ export interface Api {
   setUserName(name: string): Promise<void>;
   setOpenLastVault(value: boolean): Promise<void>;
   setActiveVault(vaultId: string): Promise<void>;
+  setOneOnOneVault(vaultId: string): Promise<void>;
 
   // vaults
   listVaults(): Promise<VaultInfo[]>;
@@ -46,6 +47,28 @@ export interface Api {
   renameDocFolder(vaultId: string, from: string, to: string): Promise<void>;
   deleteDocFolder(vaultId: string, path: string): Promise<void>;
   saveAttachment(vaultId: string, docPath: string, extension: string, bytes: Uint8Array): Promise<string>;
+
+  // time off (one file per person in "Time off/")
+  listTimeOff(vaultId: string): Promise<TimeOffPerson[]>;
+  saveTimeOff(vaultId: string, person: string, entry: Omit<TimeOffEntry, 'id'> & { id?: string }): Promise<TimeOffEntry>;
+  deleteTimeOff(vaultId: string, person: string, entryId: string): Promise<void>;
+  setTimeOffAllowance(vaultId: string, person: string, allowance: number, year?: string): Promise<void>;
+
+  // 1:1 notes (in the vault chosen in settings.oneOnOneVaultId)
+  listOneOnOnes(vaultId: string): Promise<OneOnOnePerson[]>;
+  readOneOnOne(vaultId: string, person: string, meetingId: string): Promise<DocFile>;
+  writeOneOnOne(vaultId: string, person: string, meetingId: string, text: string, expectedHash: string | null): Promise<{ hash: string; modified: number }>;
+  startOneOnOne(vaultId: string, person: string, date: string): Promise<string>;
+  deleteOneOnOne(vaultId: string, person: string, meetingId: string): Promise<void>;
+  setOneOnOneAgenda(vaultId: string, person: string, topics: string[]): Promise<void>;
+  setOneOnOneCadence(vaultId: string, person: string, days: number): Promise<void>;
+  saveFeedback(vaultId: string, person: string, entry: Omit<FeedbackEntry, 'id'> & { id?: string }): Promise<void>;
+  deleteFeedback(vaultId: string, person: string, entryId: string): Promise<void>;
+  createReview(vaultId: string, person: string, title: string): Promise<string>;
+  readReview(vaultId: string, person: string, reviewId: string): Promise<DocFile>;
+  writeReview(vaultId: string, person: string, reviewId: string, text: string, expectedHash: string | null): Promise<{ hash: string; modified: number }>;
+  renameReview(vaultId: string, person: string, reviewId: string, title: string): Promise<string>;
+  deleteReview(vaultId: string, person: string, reviewId: string): Promise<void>;
 
   // search and links
   search(query: string, vaultIds: string[]): Promise<SearchResult[]>;

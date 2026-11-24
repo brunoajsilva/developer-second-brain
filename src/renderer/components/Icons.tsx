@@ -57,5 +57,18 @@ export {
   FileQuestionMark as UnknownFileIcon,
   TriangleAlert as WarningIcon,
   ArrowRightLeft as ConvertIcon,
-  Cpu as BinaryFileIcon
+  Cpu as BinaryFileIcon,
+  KeyRound as KeyIcon,
+  ShieldCheck as ShieldCheckIcon,
+  ShieldX as ShieldOffIcon,
+  Clock as ClockIcon,
+  Contact as PeopleIcon,
+  MessageSquareHeart as FeedbackIcon,
+  MessagesSquare as MeetingIcon,
+  ListTodo as AgendaIcon,
+  ThumbsUp as PraiseIcon,
+  TrendingUp as ImproveIcon,
+  StickyNote as NoteIcon,
+  Play as StartIcon,
+  ClipboardCheck as ReviewIcon
 } from 'lucide-react';

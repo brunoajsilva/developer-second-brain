@@ -6,6 +6,7 @@ import { BlockedIcon, CheckIcon, DoneIcon, FlagIcon, InProgressIcon, TodoIcon } 
 import { spring } from '../../components/motion';
 import { boardName, columnOf, isDoneCard } from '../../app/useVaultData';
 import { useWorkspace } from '../../app/workspace';
+import { TYPE_SHORT, addDays, outOn, todayIso } from '../time-off/calendar';
 import type { Board, Card } from '../../../shared/types';
 
 const WEEK_MS = 7 * 86_400_000;
@@ -17,7 +18,7 @@ function greeting(): string {
 }
 
 export function TodayView() {
-  const { data, settings, vault, openCard, reload, dialogs } = useWorkspace();
+  const { data, settings, vault, openCard, reload, dialogs, go } = useWorkspace();
   if (!data) return <div className="page-scroll" />;
   const { boards } = data;
   const me = settings.userName;
@@ -69,6 +70,7 @@ export function TodayView() {
           </section>
           <section className="panel">
             <header className="panel-head"><h2>Team</h2></header>
+            <OutThisWeek onOpen={() => go({ kind: 'time-off' })} />
             <CardGroup title="Blocked" tone="warn" cards={blocked} boards={boards} onOpen={openCard} showAssignee empty="Nothing is blocked." />
             <CardGroup title="Done in the last 7 days" tone="ok" cards={doneThisWeek} boards={boards} onOpen={openCard} showAssignee empty="Nothing finished yet this week." />
           </section>
@@ -138,5 +140,36 @@ function CardRow({ card, boards, onOpen, showAssignee }: { card: Card; boards: B
       {showAssignee && card.assignee && <Avatar name={card.assignee} size={20} />}
       {card.due && <span className={'due' + (!done && d !== null && d < 0 ? ' overdue' : !done && d !== null && d <= 2 ? ' soon' : '')} title={describeDue(card.due)}>{formatDay(card.due)}</span>}
     </button>
+  );
+}
+
+/** Who is away today and in the next 7 days, from the team's time off. */
+function OutThisWeek({ onOpen }: { onOpen: () => void }) {
+  const { data } = useWorkspace();
+  const today = todayIso();
+  const seen = new Map<string, { person: string; type: string; start: string; end: string }>();
+  for (let i = 0; i < 7; i++) {
+    for (const o of outOn(data?.timeOff ?? [], addDays(today, i))) {
+      seen.set(o.person + o.entry.id, { person: o.person, type: TYPE_SHORT[o.entry.type], start: o.entry.start, end: o.entry.end });
+    }
+  }
+  const list = [...seen.values()].sort((a, b) => a.start.localeCompare(b.start));
+  return (
+    <div className="card-group">
+      <h3>Out this week <span className="count">{list.length}</span></h3>
+      {!list.length && <p className="group-empty">Everyone is around this week.</p>}
+      <ul>
+        {list.map((o) => (
+          <li key={o.person + o.start}>
+            <button className="card-row" onClick={onOpen}>
+              <Avatar name={o.person} size={20} />
+              <span className="card-row-title">{o.person}</span>
+              <span className="card-row-board">{o.type}</span>
+              <span className={'due' + (o.start <= today ? ' soon' : '')}>{o.start <= today ? 'now' : formatDay(o.start)}{o.end !== o.start ? ` → ${formatDay(o.end)}` : ''}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

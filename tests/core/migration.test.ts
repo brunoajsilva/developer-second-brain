@@ -69,7 +69,7 @@ describe('legacy vault migration', () => {
     const dir = await tempDir('settings');
     await fs.writeFile(path.join(dir, 'definicoes.json'), JSON.stringify({ utilizador: 'Bruno', abrirUltimo: true, cofreAtivo: 'a1', cofres: [{ id: 'a1', nome: 'Equipa', caminho: '/x', pessoal: true }] }));
     const store = new SettingsStore(path.join(dir, 'settings.json'));
-    expect(await store.read()).toEqual({ userName: 'Bruno', openLastVault: true, activeVaultId: 'a1', vaults: [{ id: 'a1', name: 'Equipa', path: '/x', personal: true }] });
+    expect(await store.read()).toEqual({ userName: 'Bruno', openLastVault: true, activeVaultId: 'a1', vaults: [{ id: 'a1', name: 'Equipa', path: '/x', personal: true }], oneOnOneVaultId: '' });
     expect(JSON.parse(await fs.readFile(path.join(dir, 'settings.json'), 'utf8')).userName).toBe('Bruno');
   });
 });

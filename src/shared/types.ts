@@ -19,6 +19,8 @@ export interface Settings {
   openLastVault: boolean;
   activeVaultId: string;
   vaults: VaultRecord[];
+  /** Vault that holds this person's private 1:1 notes ('' = not chosen yet). */
+  oneOnOneVaultId: string;
 }
 
 export interface Column {
@@ -66,6 +68,76 @@ export interface CardInput {
   priority: Priority;
   tags: string[];
   body: string;
+}
+
+/** leave = statutory leave such as parental, marriage or bereavement; never deducted from vacation days. */
+export type TimeOffType = 'vacation' | 'sick' | 'training' | 'leave' | 'other';
+
+export interface TimeOffEntry {
+  id: string;
+  type: TimeOffType;
+  /** YYYY-MM-DD, inclusive. */
+  start: string;
+  end: string;
+  /** Half day (only when start === end). */
+  half?: 'am' | 'pm';
+  note: string;
+}
+
+export interface TimeOffPerson {
+  person: string;
+  /** Vacation working days per year. */
+  allowance: number;
+  /** Per-year overrides, e.g. { "2026": 25 } for carried-over days. */
+  allowanceByYear: Record<string, number>;
+  entries: TimeOffEntry[];
+}
+
+export interface OneOnOneAction {
+  /** Meeting date (file) the action item lives in, and its 0-based line. */
+  meeting: string;
+  line: number;
+  text: string;
+}
+
+export interface OneOnOneMeeting {
+  /** YYYY-MM-DD, or YYYY-MM-DD-2 for a second meeting on the same day. */
+  id: string;
+  date: string;
+  excerpt: string;
+  openActions: number;
+}
+
+export type FeedbackKind = 'praise' | 'improve' | 'note';
+
+export interface FeedbackEntry {
+  /** "YYYY-MM-DD#n": the n-th entry written on that date. */
+  id: string;
+  date: string;
+  kind: FeedbackKind;
+  text: string;
+}
+
+export interface OneOnOnePerson {
+  person: string;
+  /** Days between 1:1s (7, 14, 30…); 0 = no regular cadence. */
+  cadenceDays: number;
+  /** Topics collected for the next 1:1. */
+  agenda: string[];
+  /** Newest first. */
+  meetings: OneOnOneMeeting[];
+  openActions: OneOnOneAction[];
+  /** General feedback about the person, newest first. */
+  feedback: FeedbackEntry[];
+  /** Free Markdown documents (performance reviews…), last edited first. */
+  reviews: ReviewSummary[];
+}
+
+export interface ReviewSummary {
+  /** File name without ".md"; also the title. */
+  id: string;
+  modified: number;
+  excerpt: string;
 }
 
 export interface DocSummary {

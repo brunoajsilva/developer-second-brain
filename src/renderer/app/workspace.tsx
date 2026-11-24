@@ -12,6 +12,8 @@ export interface Workspace {
   /** Bumped when files change on disk. */
   tick: number;
   reload: () => void;
+  /** Re-reads the local settings (after changing the name or the 1:1 vault). */
+  refreshSettings: () => void;
   go: (view: View, replace?: boolean) => void;
   openCard: (boardId: string, cardId: string) => void;
   openDoc: (path: string) => void;

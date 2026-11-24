@@ -13,6 +13,8 @@ import {
 } from '../../core/docs/docs';
 import { buildSearchIndex, findBacklinks, searchIndex, type SearchIndex } from '../../core/search/search-index';
 import { listConflicts, resolveConflict } from '../../core/conflicts/conflicts';
+import { deleteTimeOff, listTimeOff, saveTimeOff, setTimeOffAllowance } from '../../core/time-off/time-off';
+import { createReview, deleteFeedback, deleteOneOnOne, deleteReview, readReview, renameReview, writeReview, listOneOnOnes, saveFeedback, readOneOnOne, setOneOnOneAgenda, setOneOnOneCadence, startOneOnOne, writeOneOnOne } from '../../core/one-on-ones/one-on-ones';
 import { pathExists, readTextFile } from '../../core/fs/file-store';
 import { ValidationError, resolveInside } from '../../core/fs/paths';
 import { VaultWatcher } from './vault-watcher';
@@ -101,6 +103,7 @@ export class AppService {
     setUserName: async (name) => void (await this.settings.update((s) => void (s.userName = name.trim().slice(0, 60)))),
     setOpenLastVault: async (value) => void (await this.settings.update((s) => void (s.openLastVault = !!value))),
     setActiveVault: async (id) => void (await this.settings.update((s) => void (s.activeVaultId = id))),
+    setOneOnOneVault: async (id) => void (await this.settings.update((s) => void (s.oneOnOneVaultId = id))),
 
     listVaults: async () => getVaultStatuses(await this.settings.read()),
     pickFolder: (title) => this.host.pickFolder(title),
@@ -131,6 +134,7 @@ export class AppService {
       await this.settings.update((s) => {
         s.vaults = s.vaults.filter((v) => v.id !== id);
         if (s.activeVaultId === id) s.activeVaultId = '';
+        if (s.oneOnOneVaultId === id) s.oneOnOneVaultId = '';
       });
       await this.forget(id);
     },
@@ -167,6 +171,26 @@ export class AppService {
     renameDocFolder: async (id, from, to) => renameDocFolder(await this.vaultRoot(id), from, to),
     deleteDocFolder: async (id, p) => deleteDocFolder(await this.vaultRoot(id), p),
     saveAttachment: async (id, docPath, ext, bytes) => saveAttachment(await this.vaultRoot(id), docPath, ext, bytes),
+
+    listTimeOff: async (id) => listTimeOff(await this.vaultRoot(id)),
+    saveTimeOff: async (id, person, entry) => saveTimeOff(await this.vaultRoot(id), person, entry),
+    deleteTimeOff: async (id, person, entryId) => deleteTimeOff(await this.vaultRoot(id), person, entryId),
+    setTimeOffAllowance: async (id, person, allowance, year) => setTimeOffAllowance(await this.vaultRoot(id), person, allowance, year),
+
+    listOneOnOnes: async (id) => listOneOnOnes(await this.vaultRoot(id)),
+    readOneOnOne: async (id, person, meeting) => readOneOnOne(await this.vaultRoot(id), person, meeting),
+    writeOneOnOne: async (id, person, meeting, text, hash) => writeOneOnOne(await this.vaultRoot(id), person, meeting, text, hash),
+    startOneOnOne: async (id, person, date) => startOneOnOne(await this.vaultRoot(id), person, date),
+    deleteOneOnOne: async (id, person, meeting) => deleteOneOnOne(await this.vaultRoot(id), person, meeting),
+    setOneOnOneAgenda: async (id, person, topics) => setOneOnOneAgenda(await this.vaultRoot(id), person, topics),
+    setOneOnOneCadence: async (id, person, days) => setOneOnOneCadence(await this.vaultRoot(id), person, days),
+    saveFeedback: async (id, person, entry) => saveFeedback(await this.vaultRoot(id), person, entry),
+    deleteFeedback: async (id, person, entryId) => deleteFeedback(await this.vaultRoot(id), person, entryId),
+    createReview: async (id, person, title) => createReview(await this.vaultRoot(id), person, title),
+    readReview: async (id, person, review) => readReview(await this.vaultRoot(id), person, review),
+    writeReview: async (id, person, review, text, hash) => writeReview(await this.vaultRoot(id), person, review, text, hash),
+    renameReview: async (id, person, review, title) => renameReview(await this.vaultRoot(id), person, review, title),
+    deleteReview: async (id, person, review) => deleteReview(await this.vaultRoot(id), person, review),
 
     search: async (query, vaultIds) => {
       const out = [];

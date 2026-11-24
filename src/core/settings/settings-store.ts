@@ -6,7 +6,7 @@ import { readVaultMeta } from '../vault/vault';
 import { VAULT_FILE } from '../vault/layout';
 import type { Settings, VaultInfo, VaultRecord } from '../../shared/types';
 
-export const defaultSettings = (): Settings => ({ userName: '', openLastVault: false, activeVaultId: '', vaults: [] });
+export const defaultSettings = (): Settings => ({ userName: '', openLastVault: false, activeVaultId: '', vaults: [], oneOnOneVaultId: '' });
 
 /** Settings file written by versions before v0.2 (Portuguese keys), next to the current one. */
 export const LEGACY_SETTINGS_FILE = 'definicoes.json';
@@ -59,7 +59,7 @@ function normalize(raw: unknown): Settings {
         .filter((v): v is Record<string, unknown> => !!v && typeof v.id === 'string' && typeof v.path === 'string')
         .map((v) => ({ id: v.id as string, name: String(v.name ?? ''), path: v.path as string, personal: v.personal === true }))
     : [];
-  return { userName: String(j.userName ?? ''), openLastVault: j.openLastVault === true, activeVaultId: String(j.activeVaultId ?? ''), vaults };
+  return { userName: String(j.userName ?? ''), openLastVault: j.openLastVault === true, activeVaultId: String(j.activeVaultId ?? ''), vaults, oneOnOneVaultId: String(j.oneOnOneVaultId ?? '') };
 }
 
 /** Status of each registered vault: available, or why not (missing folder, a different vault in the folder). */

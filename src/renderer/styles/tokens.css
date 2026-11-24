@@ -49,3 +49,17 @@
   /* one horizontal margin for every screen, so content lines up with the board */
   --gutter: 24px;
 }
+
+/* Time off types: one hue each, readable as solid bars on white */
+:root {
+  --to-vacation: #2d4bf0;
+  --to-vacation-soft: #e6ebfe;
+  --to-sick: #e5484d;
+  --to-sick-soft: #fdeaec;
+  --to-training: #8a3fd1;
+  --to-training-soft: #f1e8fc;
+  --to-leave: #0e8a7e;
+  --to-leave-soft: #dff4f1;
+  --to-other: #c27a00;
+  --to-other-soft: #fff1d6;
+}

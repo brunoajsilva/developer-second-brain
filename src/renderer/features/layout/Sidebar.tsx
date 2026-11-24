@@ -7,10 +7,11 @@ import { spring } from '../../components/motion';
 import { Menu, anchorFrom, type MenuAnchor, type MenuEntry } from '../../components/Menu';
 import { Avatar } from '../../components/Avatar';
 import {
-  BoardIcon, CollectionIcon, ConflictIcon, EditIcon, FolderOpenIcon, InboxIcon, LockIcon, PlusIcon, SearchIcon, SettingsIcon, SidebarIcon, SwitchIcon, TeamIcon, TodayIcon, TrashIcon, UserIcon
+  BoardIcon, CalendarIcon, CollectionIcon, PeopleIcon, ConflictIcon, EditIcon, FolderOpenIcon, InboxIcon, LockIcon, PlusIcon, SearchIcon, SettingsIcon, SidebarIcon, SwitchIcon, TeamIcon, TodayIcon, TrashIcon, UserIcon
 } from '../../components/Icons';
 import { useWorkspace } from '../../app/workspace';
 import { TOOLS } from '../tools/registry';
+import { outOn, todayIso } from '../time-off/calendar';
 import type { View } from '../../app/navigation';
 
 interface SidebarProps {
@@ -73,6 +74,11 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
       <div className="sidebar-scroll">
         <NavGroup>
           <NavItem icon={<TodayIcon size={17} />} label="Today" count={myOpenCount} active={view.kind === 'today'} collapsed={collapsed} onClick={() => go({ kind: 'today' })} />
+        </NavGroup>
+
+        <NavGroup title="Team" collapsed={collapsed} onAdd={dialogs.team} addLabel="Manage team">
+          <NavItem icon={<PeopleIcon size={17} />} label="People" active={view.kind === 'people'} collapsed={collapsed} onClick={() => go({ kind: 'people' })} />
+          <NavItem icon={<CalendarIcon size={17} />} label="Time off" count={outOn(data?.timeOff ?? [], todayIso()).length} active={view.kind === 'time-off'} collapsed={collapsed} onClick={() => go({ kind: 'time-off' })} />
         </NavGroup>
 
         <NavGroup title="Boards" collapsed={collapsed} onAdd={dialogs.newBoard} addLabel="New board">

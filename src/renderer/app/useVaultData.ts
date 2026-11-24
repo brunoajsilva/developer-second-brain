@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { api } from '../lib/api';
 import { useLoader } from '../lib/hooks';
-import type { Board, Card, ConflictCopy, DocSummary } from '../../shared/types';
+import type { Board, Card, ConflictCopy, DocSummary, TimeOffPerson } from '../../shared/types';
 
 export interface VaultData {
   boards: Board[];
@@ -10,6 +10,9 @@ export interface VaultData {
   people: string[];
   conflicts: ConflictCopy[];
   docFolders: string[];
+  timeOff: TimeOffPerson[];
+  /** Parts that could not be loaded, with the reason. Everything else still shows. */
+  failures: string[];
 }
 
 export const isDoneCard = (boards: Board[], c: Card) => !!boards.find((b) => b.id === c.board)?.columns.find((col) => col.id === c.status)?.done;
@@ -20,10 +23,15 @@ export const columnOf = (boards: Board[], c: Card) => boards.find((b) => b.id ==
 export function useVaultData(vaultId: string | null, tick: number) {
   const loader = useLoader(async (): Promise<VaultData | null> => {
     if (!vaultId) return null;
-    const [boards, cards, docs, people, conflicts, docFolders] = await Promise.all([
-      api.listBoards(vaultId), api.listAllCards(vaultId), api.listDocs(vaultId), api.listPeople(vaultId), api.listConflicts(vaultId), api.listDocFolders(vaultId)
+    // each part loads on its own, so one failing call never empties the whole screen
+    const failures: string[] = [];
+    const safe = <T,>(what: string, p: Promise<T>, fallback: T) => p.catch((e: unknown) => { failures.push(`${what}: ${e instanceof Error ? e.message : String(e)}`); return fallback; });
+    const [boards, cards, docs, people, conflicts, docFolders, timeOff] = await Promise.all([
+      safe('boards', api.listBoards(vaultId), []), safe('cards', api.listAllCards(vaultId), []), safe('pages', api.listDocs(vaultId), []),
+      safe('team', api.listPeople(vaultId), []), safe('sync conflicts', api.listConflicts(vaultId), []), safe('folders', api.listDocFolders(vaultId), []),
+      safe('time off', api.listTimeOff(vaultId), [])
     ]);
-    return { boards, cards, docs, people, conflicts, docFolders };
+    return { boards, cards, docs, people, conflicts, docFolders, timeOff, failures };
   }, [vaultId, tick]);
   const data = loader.data;
 

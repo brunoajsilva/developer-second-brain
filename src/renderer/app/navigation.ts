@@ -5,6 +5,8 @@ export type View =
   | { kind: 'board'; boardId: string; cardId?: string }
   | { kind: 'docs'; collection: string; path: string | null }
   | { kind: 'conflicts' }
+  | { kind: 'time-off' }
+  | { kind: 'people'; person?: string; meeting?: string; review?: string; tab?: PersonTab }
   | { kind: 'tool'; toolId: string };
 
 const HISTORY_LIMIT = 60;
@@ -48,3 +50,6 @@ export function useNavigation() {
     reset
   };
 }
+
+/** Tabs of a person's page under Team › People. */
+export type PersonTab = 'feedback' | 'one-on-ones' | 'reviews';
