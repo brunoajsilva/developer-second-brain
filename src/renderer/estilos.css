@@ -140,7 +140,7 @@ select.campo{padding-right:8px}
 .docs-nav .it.ativo{background:var(--tinta);color:var(--inv);font-weight:600}
 .docs-nav .it.sub{padding-left:26px}
 .artigo{flex:1;min-width:0;background:var(--sup);border-radius:24px;padding:28px 40px 40px;overflow:auto;display:flex;flex-direction:column;align-items:center}
-.artigo>.in{width:100%;max-width:720px;display:flex;flex-direction:column;gap:18px;font-size:15px;line-height:1.65}
+.artigo>.in{width:100%;max-width:720px;display:flex;flex-direction:column;gap:18px;font-size:15px;line-height:1.5}
 .toc{width:190px;flex:none;padding:20px 8px;display:flex;flex-direction:column;gap:10px;font-size:13px;overflow:auto}
 .toc a{color:var(--tinta2);text-decoration:none;border-left:2px solid var(--linha);padding-left:10px;cursor:pointer}
 .toc a.on{color:var(--tinta);border-left-color:var(--tinta)}
@@ -363,13 +363,19 @@ select.filtro{appearance:none;padding-right:14px;cursor:pointer}
 .artigo{padding:28px clamp(32px,4vw,88px) 40px}
 .artigo>.in{max-width:1600px}
 @media (min-width:2200px){.artigo>.in{font-size:16px}.toc{width:240px}}
-/* card notes: tighter rhythm than full pages */
-.notas-ler .md{display:block;font-size:14px;line-height:1.55}
-.notas-ler .md>*{margin-top:0;margin-bottom:8px}
-.notas-ler .md>*:last-child{margin-bottom:0}
-.notas-ler .md h1,.notas-ler .md h2,.notas-ler .md h3,.notas-ler .md h4{margin:14px 0 4px;line-height:1.3}
-.notas-ler .md>h1:first-child,.notas-ler .md>h2:first-child,.notas-ler .md>h3:first-child,.notas-ler .md>h4:first-child{margin-top:0}
-.notas-ler .md h1{font-size:22px}.notas-ler .md h2{font-size:17px}.notas-ler .md h3,.notas-ler .md h4{font-size:15px}
-.notas-ler .md ul,.notas-ler .md ol{padding-left:1.4em}
-.notas-ler .md li+li{margin-top:2px}
-.notas-ler .md li>p{margin:0}
+
+/* Markdown typography, report-like: 1.5 line spacing and one consistent vertical rhythm (pages and cards) */
+.md{display:block;line-height:1.5}
+.md>*,.md li>ul,.md li>ol{margin-top:0;margin-bottom:.75em}
+.md>*:last-child{margin-bottom:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{line-height:1.3;margin:1.5em 0 .5em}
+.md>h1:first-child,.md>h2:first-child,.md>h3:first-child,.md>h4:first-child{margin-top:0}
+.md h1{font-size:2.2em}.md h2{font-size:1.35em;font-weight:500}.md h3{font-size:1.12em;font-weight:600}.md h4{font-size:1em;font-weight:600}
+.md p{margin:0 0 .75em}
+.md ul,.md ol{padding-left:1.4em}
+.md li{margin:0}.md li+li{margin-top:.25em}
+.md li>p{margin:0 0 .25em}
+.md li>ul,.md li>ol{margin-top:.25em;margin-bottom:0}
+.md table,.md pre,.md blockquote,.md details,.md .mermaid-src{margin-bottom:1em}
+.notas-ler .md{font-size:14px}
+.notas-ler .md h1{font-size:1.6em}
