@@ -1,0 +1,20 @@
+import { build as esbuild } from 'esbuild';
+import { createServer } from 'vite';
+import { spawn } from 'node:child_process';
+import { cpSync } from 'node:fs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const electron = require('electron');
+const comum = { bundle: true, platform: 'node', format: 'cjs', target: 'node22', external: ['electron', 'fsevents'], logLevel: 'warning' };
+await esbuild({ ...comum, entryPoints: ['src/main/main.ts'], outfile: 'dist/main/main.cjs' });
+await esbuild({ ...comum, entryPoints: ['src/preload/preload.ts'], outfile: 'dist/preload/preload.cjs' });
+cpSync('build/icon.png', 'dist/icon.png');
+cpSync('build/icon-mac.png', 'dist/icon-mac.png');
+const server = await createServer({ configFile: 'vite.config.mjs' });
+await server.listen();
+const addr = server.httpServer.address();
+const url = `http://127.0.0.1:${addr.port}/`;
+console.log('Dev server:', url);
+const p = spawn(electron, ['.'], { stdio: 'inherit', env: { ...process.env, VITE_DEV_SERVER_URL: url } });
+p.on('exit', async () => { await server.close(); process.exit(0); });

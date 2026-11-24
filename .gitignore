@@ -1,0 +1,43 @@
+# Dependências
+node_modules/
+.npm/
+.pnpm-store/
+
+# Resultado das compilações
+dist/
+release/
+out/
+*.tsbuildinfo
+.vite/
+
+# Testes
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Segredos e configuração local
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Dados de teste de cofres criados durante o desenvolvimento
+.lixo/
