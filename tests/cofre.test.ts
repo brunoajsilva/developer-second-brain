@@ -13,22 +13,22 @@ describe('cofres', () => {
     expect(meta.id).toMatch(/^[0-9a-f]{8}$/);
     expect((await lerCofre(d))?.nome).toBe('Equipa Cards');
     for (const s of ['Docs', 'Boards']) expect((await fs.stat(path.join(d, s))).isDirectory()).toBe(true);
-    expect((await listarBoards(d))[0].estados.map((e) => e.nome)).toEqual(['A fazer', 'Em curso', 'Bloqueado', 'Feito']);
-    expect((await listarDocs(d)).map((x) => x.path)).toContain('Guia de utilização/Bem-vindo.md');
+    expect((await listarBoards(d))[0].estados.map((e) => e.nome)).toEqual(['To do', 'In progress', 'Blocked', 'Done']);
+    expect((await listarDocs(d)).map((x) => x.path)).toContain('User guide/Welcome.md');
   });
 
   it('recusa cofres aninhados, repetidos e com id repetido', async () => {
     const a = await pastaTemp('a');
     const metaA = await criarCofre(a, 'A', false, []);
     const reg = [{ id: metaA.id, nome: 'A', caminho: a }];
-    await expect(criarCofre(path.join(a, 'dentro'), 'B', false, reg)).rejects.toThrow(/dentro do cofre/);
-    await expect(abrirPastaComoCofre(a, reg)).rejects.toThrow(/ja esta na lista/);
+    await expect(criarCofre(path.join(a, 'dentro'), 'B', false, reg)).rejects.toThrow(/inside the vault/);
+    await expect(abrirPastaComoCofre(a, reg)).rejects.toThrow(/already in the list/);
     const pai = path.dirname(a);
     await expect(criarCofre(pai, 'Pai', false, reg)).rejects.toThrow();
     // cópia da pasta: mesmo id noutro sítio
     const copia = await pastaTemp('copia');
     await fs.cp(a, copia, { recursive: true });
-    await expect(abrirPastaComoCofre(copia, reg)).rejects.toThrow(/mesmo|identificador/i);
+    await expect(abrirPastaComoCofre(copia, reg)).rejects.toThrow(/identifier/i);
   });
 
   it('abrir uma pasta sem _cofre.md pede conversão e não toca nos ficheiros', async () => {

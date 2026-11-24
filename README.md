@@ -31,3 +31,35 @@ O ficheiro `.github/workflows/build.yml` compila o `.exe` num Windows na nuvem.
 ### No teu PC (Windows, com Node.js 20+)
     npm install
     npm run dist       # release/DeveloperSecondBrain-<versão>-portatil.exe
+
+## Instalar noutro PC (a partir do repositório público)
+
+**Windows** (PowerShell, sem instalar nada; precisa de uma release publicada):
+
+```
+irm https://raw.githubusercontent.com/brunoajsilva/developer-second-brain/main/scripts/instalar.ps1 | iex
+```
+
+Descarrega o `secondbrain.exe` mais recente para `%LOCALAPPDATA%\SecondBrain`, junta a pasta ao `PATH` e cria um atalho no menu Iniciar. Para atualizar, corre o mesmo comando outra vez.
+
+**Mac/Linux** (precisa de Node 22+ e Git):
+
+```
+curl -fsSL https://raw.githubusercontent.com/brunoajsilva/developer-second-brain/main/scripts/instalar.sh | bash
+```
+
+Depois, em qualquer terminal novo: `secondbrain`.
+
+## Abrir a partir do terminal (`secondbrain`)
+
+**Mac/Linux/Windows, a partir do código** (precisa de Node):
+
+```
+npm install
+npm run cli:instalar   # compila e regista o comando "secondbrain" (npm link)
+secondbrain            # abre a aplicação; o terminal fica livre
+```
+
+Para remover: `npm unlink -g developer-secondbrain`.
+
+**Windows, com o executável portátil:** o ficheiro chama-se `secondbrain.exe`. Põe-no numa pasta (por exemplo `C:\Ferramentas`), junta essa pasta ao `PATH` e escreve `secondbrain` numa nova janela do terminal.

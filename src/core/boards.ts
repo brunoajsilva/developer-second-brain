@@ -13,9 +13,9 @@ const dirBoards = (cofre: string) => path.join(cofre, 'Boards');
 
 export function estadosPadrao(): Estado[] {
   return [
-    { id: 'a-fazer', nome: 'A fazer' },
-    { id: 'em-curso', nome: 'Em curso' },
-    { id: 'feito', nome: 'Feito', fim: true }
+    { id: 'a-fazer', nome: 'To do' },
+    { id: 'em-curso', nome: 'In progress' },
+    { id: 'feito', nome: 'Done', fim: true }
   ];
 }
 
@@ -32,8 +32,8 @@ function limparEstados(es: Estado[]): Estado[] {
     usados.add(id);
     out.push({ id, nome, ...(e.fim ? { fim: true } : {}) });
   }
-  if (out.length < 1) throw new ErroValidacao('O board precisa de pelo menos um estado.');
-  if (out.length > 12) throw new ErroValidacao('Maximo de 12 estados.');
+  if (out.length < 1) throw new ErroValidacao('A board needs at least one column.');
+  if (out.length > 12) throw new ErroValidacao('A board can have at most 12 columns.');
   if (!out.some((e) => e.fim)) out[out.length - 1].fim = true;
   return out;
 }
@@ -75,12 +75,12 @@ export async function listarBoards(cofre: string): Promise<Board[]> {
 
 export async function guardarBoard(cofre: string, b: { id?: string; nome: string; descricao?: string; estados: Estado[] }): Promise<Board> {
   const nome = b.nome.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 60);
-  if (!nome) throw new ErroValidacao('O board precisa de um nome.');
+  if (!nome) throw new ErroValidacao('The board needs a name.');
   const estados = limparEstados(b.estados);
   let id = b.id || '';
   if (id) {
-    if (!reId.test(id)) throw new ErroValidacao('id de board invalido');
-    if (!(await existe(path.join(dirBoards(cofre), id)))) throw new ErroValidacao('board nao encontrado');
+    if (!reId.test(id)) throw new ErroValidacao('invalid board id');
+    if (!(await existe(path.join(dirBoards(cofre), id)))) throw new ErroValidacao('board not found');
   } else {
     const base = slug(nome, 30) || 'board';
     id = base;
@@ -99,9 +99,9 @@ export async function guardarBoard(cofre: string, b: { id?: string; nome: string
 }
 
 export async function apagarBoard(cofre: string, id: string): Promise<void> {
-  if (!reId.test(id)) throw new ErroValidacao('id de board invalido');
+  if (!reId.test(id)) throw new ErroValidacao('invalid board id');
   const dir = path.join(dirBoards(cofre), id);
-  if (!(await existe(dir))) throw new ErroValidacao('board nao encontrado');
+  if (!(await existe(dir))) throw new ErroValidacao('board not found');
   await paraLixo(cofre, dir);
 }
 
@@ -142,7 +142,7 @@ function paraCartao(boardId: string, ficheiro: string, texto: string, hash: stri
 }
 
 export async function listarCartoes(cofre: string, boardId: string, estados?: Estado[]): Promise<CartaoRaw[]> {
-  if (!reId.test(boardId)) throw new ErroValidacao('id de board invalido');
+  if (!reId.test(boardId)) throw new ErroValidacao('invalid board id');
   const dir = path.join(dirBoards(cofre), boardId);
   const es = estados ?? (await lerBoardDir(dir, boardId))?.estados ?? estadosPadrao();
   let nomes: string[];
@@ -172,9 +172,9 @@ export async function listarTodosCartoes(cofre: string): Promise<Cartao[]> {
 }
 
 async function acharCartao(cofre: string, boardId: string, id: string): Promise<CartaoRaw> {
-  if (!reId.test(id)) throw new ErroValidacao('id de cartao invalido');
+  if (!reId.test(id)) throw new ErroValidacao('invalid card id');
   const c = (await listarCartoes(cofre, boardId)).find((x) => x.id === id);
-  if (!c) throw new ErroValidacao('cartao nao encontrado');
+  if (!c) throw new ErroValidacao('card not found');
   return c;
 }
 
@@ -198,18 +198,18 @@ const agora = () => new Date().toISOString().slice(0, 19);
 
 function limparEntrada(e: CartaoEntrada) {
   const titulo = e.titulo.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 120);
-  if (!titulo) throw new ErroValidacao('O titulo nao pode ficar vazio.');
+  if (!titulo) throw new ErroValidacao('The title cannot be empty.');
   const prazo = /^\d{4}-\d{2}-\d{2}$/.test(e.prazo) ? e.prazo : '';
   const pr = PRIORIDADES.includes(e.prioridade) ? e.prioridade : '';
-  const etiquetas = [...new Set(e.etiquetas.map((t) => t.replace(/[,\u0000-\u001f]/g, ' ').trim().slice(0, 30)).filter(Boolean))].slice(0, 10);
-  if (e.corpo.length > 200000) throw new ErroValidacao('Cartao demasiado grande.');
+  const etiquetas = [...new Set(e.etiquetas.map((t) => t.replace(/[,\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40)).filter(Boolean))].slice(0, 12);
+  if (e.corpo.length > 200000) throw new ErroValidacao('Card is too large.');
   return { titulo, prazo, prioridade: pr, etiquetas, responsavel: e.responsavel.trim().slice(0, 60), corpo: e.corpo.replace(/\r\n/g, '\n').replace(/\n+$/, '') };
 }
 
 /** Grava um cartão. Cartão novo: sem id e sem hash. Existente: hash do que a interface leu. */
 export async function guardarCartao(cofre: string, e: CartaoEntrada, esperado: string | null, autor: string): Promise<Cartao> {
   const b = (await listarBoards(cofre)).find((x) => x.id === e.board);
-  if (!b) throw new ErroValidacao('board nao encontrado');
+  if (!b) throw new ErroValidacao('board not found');
   const l = limparEntrada(e);
   const estado = b.estados.some((x) => x.id === e.estado) ? e.estado : b.estados[0].id;
 
@@ -249,8 +249,8 @@ async function escreverCartaoMover(cofre: string, boardId: string, id: string, e
 /** Move um cartão para um estado, entre dois vizinhos. Só reescreve o ficheiro do cartão movido. */
 export async function moverCartao(cofre: string, boardId: string, id: string, estado: string, antesDe: string | null): Promise<void> {
   const b = (await listarBoards(cofre)).find((x) => x.id === boardId);
-  if (!b) throw new ErroValidacao('board nao encontrado');
-  if (!b.estados.some((e) => e.id === estado)) throw new ErroValidacao('estado invalido');
+  if (!b) throw new ErroValidacao('board not found');
+  if (!b.estados.some((e) => e.id === estado)) throw new ErroValidacao('invalid column');
   const col = (await listarCartoes(cofre, boardId, b.estados)).filter((c) => c.estado === estado && c.id !== id);
   let ordem: string;
   const i = antesDe ? col.findIndex((c) => c.id === antesDe) : -1;

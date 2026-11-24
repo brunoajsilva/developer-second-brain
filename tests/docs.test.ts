@@ -31,7 +31,7 @@ describe('docs', () => {
     await expect(criarDoc(d, '../Boards/x.md', 'x')).rejects.toThrow();
     await expect(criarDoc(d, '_modelos/x.md', 'x')).rejects.toThrow();
     await expect(criarDoc(d, 'sem-extensao', 'x')).rejects.toThrow();
-    await expect(lerDoc(d, 'nao-existe.md')).rejects.toThrow(/nao encontrada/);
+    await expect(lerDoc(d, 'nao-existe.md')).rejects.toThrow(/not found/);
   });
 
   it('mover e apagar (para .lixo, e remove pastas vazias)', async () => {

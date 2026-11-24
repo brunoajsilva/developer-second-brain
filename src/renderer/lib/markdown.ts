@@ -95,7 +95,7 @@ md.renderer.rules.image = (tokens, idx, _o, e: unknown) => {
 const fenceOriginal = md.renderer.rules.fence!;
 md.renderer.rules.fence = (tokens, idx, o, env, self) => {
   const t = tokens[idx];
-  if (t.info.trim().split(/\s+/)[0] === 'mermaid') return `<div class="mermaid-src" data-code="${esc(t.content)}"><pre>${esc(t.content)}</pre></div>`;
+  if (t.info.trim().split(/\s+/)[0] === 'mermaid') return `<div class="mermaid-src" data-code="${encodeURIComponent(t.content)}"><pre>${esc(t.content)}</pre></div>`;
   return fenceOriginal(tokens, idx, o, env, self);
 };
 
@@ -134,7 +134,7 @@ md.core.ruler.after('text_join', 'tarefas', (state) => {
 });
 
 // > [!NOTE] / [!TIP] / [!IMPORTANT] / [!WARNING] / [!CAUTION]
-const titulosCallout: Record<string, string> = { note: 'Nota', tip: 'Dica', important: 'Importante', warning: 'Atenção', caution: 'Cuidado' };
+const titulosCallout: Record<string, string> = { note: 'Note', tip: 'Tip', important: 'Important', warning: 'Warning', caution: 'Caution' };
 md.core.ruler.after('text_join', 'callouts', (state) => {
   const t = state.tokens;
   for (let i = 0; i < t.length - 2; i++) {
@@ -198,14 +198,17 @@ export async function desenharMermaid(raiz: HTMLElement): Promise<void> {
   });
   const mermaid = await mermaidPromise;
   for (const el of blocos) {
-    const codigo = el.dataset.code ?? '';
+    // codificado: o DOMPurify remove atributos com "-->" (setas do mermaid)
+    let codigo = '';
+    try { codigo = decodeURIComponent(el.dataset.code ?? ''); } catch { codigo = ''; }
     try {
       const { svg } = await mermaid.render('mmd-' + ++contador, codigo);
       el.innerHTML = DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true }, ADD_TAGS: ['foreignObject'] });
       el.classList.add('pronto');
-    } catch {
+    } catch (e) {
+      console.warn('[mermaid]', e);
       el.classList.add('erro');
-      el.title = 'Diagrama invalido';
+      el.title = 'Invalid diagram';
     }
   }
 }

@@ -8,8 +8,8 @@ import type { DocLido, DocResumo } from '../shared/types';
 const dirDocs = (cofre: string) => path.join(cofre, 'Docs');
 
 function validarMd(rel: string): void {
-  if (!/\.md$/i.test(rel)) throw new ErroValidacao('os nomes das paginas terminam em .md');
-  if (rel.split('/').some((s) => s.startsWith('_'))) throw new ErroValidacao('nomes que comecam por _ sao reservados');
+  if (!/\.md$/i.test(rel)) throw new ErroValidacao('page file names must end in .md');
+  if (rel.split('/').some((s) => s.startsWith('_'))) throw new ErroValidacao('names starting with _ are reserved');
 }
 
 export function caminhoDoc(cofre: string, rel: string): string {
@@ -32,13 +32,13 @@ export async function listarDocs(cofre: string): Promise<DocResumo[]> {
 
 export async function lerDoc(cofre: string, rel: string): Promise<DocLido> {
   const f = caminhoDoc(cofre, rel);
-  if (!(await existe(f))) throw new ErroValidacao('pagina nao encontrada');
+  if (!(await existe(f))) throw new ErroValidacao('page not found');
   const l = await ler(f);
   return { path: rel, texto: l.texto, hash: l.hash, mod: l.mod };
 }
 
 export async function gravarDoc(cofre: string, rel: string, texto: string, esperado: string | null): Promise<{ hash: string; mod: number }> {
-  if (texto.length > 1_000_000) throw new ErroValidacao('pagina demasiado grande (max 1 MB)');
+  if (texto.length > 1_000_000) throw new ErroValidacao('page is too large (max 1 MB)');
   const g = await gravar(caminhoDoc(cofre, rel), texto, esperado);
   return { hash: g.hash, mod: g.mod };
 }
@@ -62,7 +62,7 @@ async function limparVazias(cofre: string, d: string): Promise<void> {
 
 export async function apagarDoc(cofre: string, rel: string): Promise<void> {
   const f = caminhoDoc(cofre, rel);
-  if (!(await existe(f))) throw new ErroValidacao('pagina nao encontrada');
+  if (!(await existe(f))) throw new ErroValidacao('page not found');
   await paraLixo(cofre, f);
   await limparVazias(cofre, path.dirname(f));
 }
@@ -70,9 +70,9 @@ export async function apagarDoc(cofre: string, rel: string): Promise<void> {
 export async function moverDoc(cofre: string, de: string, para: string): Promise<void> {
   const a = caminhoDoc(cofre, de);
   const b = caminhoDoc(cofre, para);
-  if (!(await existe(a))) throw new ErroValidacao('pagina nao encontrada');
+  if (!(await existe(a))) throw new ErroValidacao('page not found');
   const mesmo = a.toLowerCase() === b.toLowerCase();
-  if (!mesmo && (await existe(b))) throw new ErroValidacao('ja existe uma pagina com esse nome');
+  if (!mesmo && (await existe(b))) throw new ErroValidacao('a page with that name already exists');
   await fs.mkdir(path.dirname(b), { recursive: true });
   await fs.rename(a, b);
   await limparVazias(cofre, path.dirname(a));
@@ -87,8 +87,8 @@ export async function moverDoc(cofre: string, de: string, para: string): Promise
 
 function validarPasta(rel: string): string {
   const limpo = rel.trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
-  if (!limpo) throw new ErroValidacao('indica o nome da pasta');
-  if (limpo.split('/').some((s) => !s.trim() || s.startsWith('_') || s.startsWith('.'))) throw new ErroValidacao('nomes de pastas nao podem comecar por _ ou .');
+  if (!limpo) throw new ErroValidacao('enter a name');
+  if (limpo.split('/').some((s) => !s.trim() || s.startsWith('_') || s.startsWith('.'))) throw new ErroValidacao('names cannot start with _ or .');
   return limpo;
 }
 
@@ -113,7 +113,7 @@ export async function listarPastas(cofre: string): Promise<string[]> {
 export async function criarPasta(cofre: string, rel: string): Promise<void> {
   const r = validarPasta(rel);
   const d = resolverDentro(cofre, 'Docs', r);
-  if (await existe(d)) throw new ErroValidacao('ja existe uma pasta com esse nome');
+  if (await existe(d)) throw new ErroValidacao('that name is already taken');
   await fs.mkdir(d, { recursive: true });
 }
 
@@ -121,10 +121,10 @@ export async function renomearPasta(cofre: string, de: string, para: string): Pr
   const a = resolverDentro(cofre, 'Docs', validarPasta(de));
   const pr = validarPasta(para);
   const b = resolverDentro(cofre, 'Docs', pr);
-  if (!(await existe(a))) throw new ErroValidacao('pasta nao encontrada');
+  if (!(await existe(a))) throw new ErroValidacao('folder not found');
   if (a.toLowerCase() === b.toLowerCase() && a === b) return;
-  if (b.toLowerCase().startsWith(a.toLowerCase() + path.sep)) throw new ErroValidacao('nao podes mover uma pasta para dentro dela propria');
-  if (a.toLowerCase() !== b.toLowerCase() && (await existe(b))) throw new ErroValidacao('ja existe uma pasta com esse nome');
+  if (b.toLowerCase().startsWith(a.toLowerCase() + path.sep)) throw new ErroValidacao('you cannot move a page inside itself');
+  if (a.toLowerCase() !== b.toLowerCase() && (await existe(b))) throw new ErroValidacao('that name is already taken');
   await fs.mkdir(path.dirname(b), { recursive: true });
   await fs.rename(a, b);
   await limparVazias(cofre, path.dirname(a));
@@ -132,7 +132,7 @@ export async function renomearPasta(cofre: string, de: string, para: string): Pr
 
 export async function apagarPasta(cofre: string, rel: string): Promise<void> {
   const d = resolverDentro(cofre, 'Docs', validarPasta(rel));
-  if (!(await existe(d))) throw new ErroValidacao('pasta nao encontrada');
+  if (!(await existe(d))) throw new ErroValidacao('folder not found');
   await paraLixo(cofre, d);
   await limparVazias(cofre, path.dirname(d));
 }
@@ -142,8 +142,8 @@ const extPermitidas = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp']);
 /** Guarda uma imagem colada em _anexos/ ao lado da página. Devolve o caminho relativo à página. */
 export async function guardarAnexo(cofre: string, docRel: string, ext: string, bytes: Uint8Array): Promise<string> {
   const e = ext.toLowerCase().replace(/^\./, '');
-  if (!extPermitidas.has(e)) throw new ErroValidacao('so se aceitam imagens png, jpg, gif ou webp');
-  if (bytes.byteLength > 10 * 1024 * 1024) throw new ErroValidacao('imagem demasiado grande (max 10 MB)');
+  if (!extPermitidas.has(e)) throw new ErroValidacao('only png, jpg, gif or webp images are accepted');
+  if (bytes.byteLength > 10 * 1024 * 1024) throw new ErroValidacao('image is too large (max 10 MB)');
   const doc = caminhoDoc(cofre, docRel);
   const dir = path.join(path.dirname(doc), '_anexos');
   await fs.mkdir(dir, { recursive: true });
@@ -162,7 +162,7 @@ export function caminhoNoCofre(cofre: string, rel: string): string {
   const segs = rel.split('/').filter(Boolean);
   const full = path.resolve(cofre, ...segs);
   const raiz = path.resolve(cofre);
-  if (full !== raiz && !full.startsWith(raiz + path.sep)) throw new ErroValidacao('caminho fora do cofre');
-  if (segs.some((s) => s === '..' || s.startsWith('.'))) throw new ErroValidacao('caminho invalido');
+  if (full !== raiz && !full.startsWith(raiz + path.sep)) throw new ErroValidacao('path is outside the vault');
+  if (segs.some((s) => s === '..' || s.startsWith('.'))) throw new ErroValidacao('invalid path');
   return full;
 }

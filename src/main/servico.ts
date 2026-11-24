@@ -41,8 +41,8 @@ export class Servico {
   async caminhoDe(cofreId: string): Promise<string> {
     const d = await this.defs.ler();
     const c = d.cofres.find((x) => x.id === cofreId);
-    if (!c) throw new ErroValidacao('cofre desconhecido');
-    if (!(await existe(c.caminho))) throw new ErroValidacao('A pasta deste cofre nao esta acessivel.');
+    if (!c) throw new ErroValidacao('unknown vault');
+    if (!(await existe(c.caminho))) throw new ErroValidacao('This vault folder is not reachable.');
     return c.caminho;
   }
 
@@ -98,7 +98,7 @@ export class Servico {
   }
 
   private async autor(): Promise<string> {
-    return (await this.defs.ler()).utilizador || 'Sem nome';
+    return (await this.defs.ler()).utilizador || 'Unnamed';
   }
 
   /** Os métodos da API. O nome de cada um é o nome da chamada IPC. */
@@ -143,8 +143,8 @@ export class Servico {
     },
     localizarCofre: async (id, pasta) => {
       const meta = await lerCofre(pasta);
-      if (!meta) throw new ErroValidacao('Essa pasta nao e um cofre (nao tem _cofre.md).');
-      if (meta.id !== id) throw new ErroValidacao('Essa pasta e outro cofre ("' + meta.nome + '"), nao o que procuras.');
+      if (!meta) throw new ErroValidacao('That folder is not a vault (it has no _cofre.md).');
+      if (meta.id !== id) throw new ErroValidacao('That folder is a different vault ("' + meta.nome + '").');
       await this.desobservar(id);
       return this.registar(meta, pasta);
     },
@@ -230,7 +230,7 @@ export class Servico {
   /** Chamada vinda do IPC: converte exceções em erros com código que a interface sabe tratar. */
   async chamar(nome: string, args: unknown[]): Promise<{ ok: true; valor: unknown } | { ok: false; erro: { codigo: string; mensagem: string; dados?: unknown } }> {
     const f = (this.api as unknown as Record<string, ((...a: unknown[]) => Promise<unknown>) | undefined>)[nome];
-    if (typeof f !== 'function' || !Object.prototype.hasOwnProperty.call(this.api, nome)) return { ok: false, erro: { codigo: 'erro', mensagem: 'chamada desconhecida' } };
+    if (typeof f !== 'function' || !Object.prototype.hasOwnProperty.call(this.api, nome)) return { ok: false, erro: { codigo: 'erro', mensagem: 'unknown call' } };
     try {
       return { ok: true, valor: await f(...args) };
     } catch (e) {
@@ -238,8 +238,8 @@ export class Servico {
       if (e instanceof ErroValidacao || e instanceof ApiErro) return { ok: false, erro: { codigo: 'invalido', mensagem: e.message } };
       const msg = e instanceof Error ? e.message : String(e);
       const codigo = (e as NodeJS.ErrnoException)?.code;
-      if (codigo === 'ENOENT') return { ok: false, erro: { codigo: 'ausente', mensagem: 'O ficheiro ou a pasta ja nao existe.' } };
-      if (codigo === 'EACCES' || codigo === 'EPERM') return { ok: false, erro: { codigo: 'permissao', mensagem: 'Sem permissao para escrever aqui.' } };
+      if (codigo === 'ENOENT') return { ok: false, erro: { codigo: 'ausente', mensagem: 'The file or folder no longer exists.' } };
+      if (codigo === 'EACCES' || codigo === 'EPERM') return { ok: false, erro: { codigo: 'permissao', mensagem: 'No permission to write here.' } };
       return { ok: false, erro: { codigo: 'erro', mensagem: msg } };
     }
   }

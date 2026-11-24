@@ -29,14 +29,14 @@ const segInvalido = /[<>:"\\|?*\u0000-\u001f]/;
 
 /** Valida um caminho relativo com "/" (sem .., sem caracteres proibidos no Windows). */
 export function validarRelativo(rel: string): string[] {
-  if (typeof rel !== 'string' || rel.length === 0 || rel.length > 240) throw new ErroValidacao('caminho invalido');
-  if (rel.startsWith('/') || /^[a-zA-Z]:/.test(rel)) throw new ErroValidacao('caminho tem de ser relativo');
+  if (typeof rel !== 'string' || rel.length === 0 || rel.length > 240) throw new ErroValidacao('invalid path');
+  if (rel.startsWith('/') || /^[a-zA-Z]:/.test(rel)) throw new ErroValidacao('path must be relative');
   const segs = rel.split('/');
   for (const s of segs) {
-    if (s === '' || s === '.' || s === '..') throw new ErroValidacao('caminho invalido');
-    if (segInvalido.test(s)) throw new ErroValidacao('caracteres invalidos no nome');
-    if (/[. ]$/.test(s)) throw new ErroValidacao('o nome nao pode acabar em ponto ou espaco');
-    if (s.startsWith('.')) throw new ErroValidacao('nomes nao podem comecar por ponto');
+    if (s === '' || s === '.' || s === '..') throw new ErroValidacao('invalid path');
+    if (segInvalido.test(s)) throw new ErroValidacao('invalid characters in the name');
+    if (/[. ]$/.test(s)) throw new ErroValidacao('names cannot end with a dot or a space');
+    if (s.startsWith('.')) throw new ErroValidacao('names cannot start with a dot');
   }
   return segs;
 }
@@ -46,7 +46,7 @@ export function resolverDentro(base: string, sub: string, rel: string): string {
   const segs = validarRelativo(rel);
   const raiz = path.resolve(base, sub);
   const full = path.resolve(raiz, ...segs);
-  if (full !== raiz && !full.startsWith(raiz + path.sep)) throw new ErroValidacao('caminho fora do cofre');
+  if (full !== raiz && !full.startsWith(raiz + path.sep)) throw new ErroValidacao('path is outside the vault');
   return full;
 }
 

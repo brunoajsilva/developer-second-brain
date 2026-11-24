@@ -33,9 +33,9 @@ export async function resolverConflito(cofre: string, copia: string, manter: 'or
   const segs = validarRelativo(copia);
   const f = path.resolve(cofre, ...segs);
   const base = originalDe(path.basename(f, '.md'));
-  if (!base) throw new Error('nao e uma copia de conflito');
+  if (!base) throw new Error('not a conflict copy');
   const orig = path.join(path.dirname(f), base + '.md');
-  if (!(await existe(f)) || !(await existe(orig))) throw new Error('ficheiro nao encontrado');
+  if (!(await existe(f)) || !(await existe(orig))) throw new Error('file not found');
   if (manter === 'copia') {
     const c = await ler(f);
     await paraLixo(cofre, orig).catch(() => undefined);

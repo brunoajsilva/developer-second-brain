@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+const MESES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 export function fmtDia(iso: string): string {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return '';
-  return `${iso.slice(8)} ${MESES[Number(iso.slice(5, 7)) - 1]}`;
+  return `${MESES[Number(iso.slice(5, 7)) - 1]} ${Number(iso.slice(8))}`;
 }
 
 export function hojeISO(): string {
@@ -22,22 +22,22 @@ export function diasAte(iso: string): number | null {
 export function fmtDiasAte(iso: string): string {
   const n = diasAte(iso);
   if (n === null) return '';
-  if (n === 0) return 'hoje';
-  if (n === 1) return 'amanhã';
-  if (n === -1) return 'ontem';
-  return n > 0 ? `daqui a ${n} dias` : `há ${-n} dias`;
+  if (n === 0) return 'today';
+  if (n === 1) return 'tomorrow';
+  if (n === -1) return 'yesterday';
+  return n > 0 ? `in ${n} days` : `${-n} days overdue`;
 }
 
 export function fmtAtras(ms: number): string {
   const s = Math.max(0, Math.round((Date.now() - ms) / 1000));
-  if (s < 10) return 'agora';
-  if (s < 60) return `há ${s} s`;
+  if (s < 10) return 'just now';
+  if (s < 60) return `${s}s ago`;
   const m = Math.round(s / 60);
-  if (m < 60) return `há ${m} min`;
+  if (m < 60) return `${m} min ago`;
   const h = Math.round(m / 60);
-  if (h < 24) return `há ${h} h`;
+  if (h < 24) return `${h}h ago`;
   const d = Math.round(h / 24);
-  return d === 1 ? 'ontem' : `há ${d} dias`;
+  return d === 1 ? 'yesterday' : `${d} days ago`;
 }
 
 export function iniciais(nome: string): string {
@@ -95,4 +95,26 @@ export function useDebounce(fn: () => void, ms: number) {
   }, []);
   useEffect(() => () => clearTimeout(t.current), []);
   return { chamar, cancelar, agora };
+}
+
+/** "Blocked" / "Bloqueado" columns (names are free text). */
+export const eBloqueado = (nome: string) => /bloq|block/i.test(nome);
+
+/** Plain-text excerpt of Markdown, for search results and previews. */
+export function textoSimples(md: string): string {
+  return md
+    .replace(/^---\n[\s\S]*?\n---\n/, '')
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/\[!(note|tip|important|warning|caution)\]/gi, '')
+    .replace(/^\s*[-*+]\s+\[[ xX]\]\s*/gm, '')
+    .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s*/gm, '')
+    .replace(/(^|\s)(#{1,6}|>)\s/g, ' ')
+    .replace(/\[[ xX]\]\s*/g, '')
+    .replace(/(^|\s)[-*+](?=\s)/g, ' ')
+    .replace(/-{3,}/g, ' ')
+    .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_m, a: string, b: string) => b || a)
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[`*_~=|]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }

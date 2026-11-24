@@ -40,11 +40,11 @@ export async function estadoDosCofres(d: Definicoes): Promise<CofreInfo[]> {
   const out: CofreInfo[] = [];
   for (const c of d.cofres) {
     if (!(await existe(c.caminho))) {
-      out.push({ ...c, disponivel: false, motivo: 'Pasta nao encontrada' });
+      out.push({ ...c, disponivel: false, motivo: 'Folder not found' });
       continue;
     }
     const meta = await lerCofre(c.caminho);
-    if (!meta) out.push({ ...c, disponivel: false, motivo: 'A pasta ja nao tem _cofre.md' });
+    if (!meta) out.push({ ...c, disponivel: false, motivo: 'The folder no longer has _cofre.md' });
     else if (meta.id !== c.id) out.push({ ...c, disponivel: false, motivo: 'A pasta e outro cofre' });
     else out.push({ ...c, nome: meta.nome || c.nome, disponivel: true });
   }

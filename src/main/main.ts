@@ -92,10 +92,10 @@ if (!app.requestSingleInstanceLock()) {
         const u = new URL(req.url);
         const raiz = await servico.caminhoDe(u.hostname);
         const abs = caminhoNoCofre(raiz, decodeURIComponent(u.pathname));
-        if (!/\.(png|jpe?g|gif|webp)$/i.test(abs)) return new Response('proibido', { status: 403 });
+        if (!/\.(png|jpe?g|gif|webp)$/i.test(abs)) return new Response('forbidden', { status: 403 });
         return net.fetch(pathToFileURL(abs).toString());
       } catch {
-        return new Response('nao encontrado', { status: 404 });
+        return new Response('not found', { status: 404 });
       }
     });
 
