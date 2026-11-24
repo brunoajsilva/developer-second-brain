@@ -75,13 +75,30 @@ jobs:
           retention-days: 30
 
   publish:
+    # main: tags the commit with the version in package.json (moving the tag if that version was already
+    # published) and replaces that release. A v* tag pushed by hand publishes that tag.
     name: Publish release
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     needs: [windows, macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
+      - name: Work out the tag
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            tag="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+      - name: Tag this commit (moves the tag when the version already exists)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git tag -f "${{ steps.version.outputs.tag }}"
+          git push -f origin "refs/tags/${{ steps.version.outputs.tag }}"
       - uses: actions/download-artifact@v4
         with:
           name: DeveloperSecondBrain-windows
@@ -92,9 +109,12 @@ jobs:
           path: release
       - uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
           files: |
             release/*.exe
             release/latest.yml
             release/*.blockmap
             release/*.dmg
+          overwrite_files: true
           generate_release_notes: true

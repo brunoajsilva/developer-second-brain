@@ -62,12 +62,9 @@ The renderer never touches the file system. It calls `api.someMethod(...)`, whic
 `.github/workflows/build.yml` builds the Windows `.exe` files on a Windows runner and the macOS `.dmg` on a Mac runner.
 
 - **On every push to `main`** (or manually, in *Actions → Build → Run workflow*): runs the tests and builds everything. Download it from *Actions →* the run *→ Artifacts* (kept for 30 days).
-- **To publish a version**, bump `version` in `package.json`, then push a tag starting with `v` that matches it:
+- **To publish a version**, change `version` in `package.json` and push to `main`. When the build passes, GitHub tags the commit (`v0.2.1`) and creates the *Release*. If that version already exists, the tag moves to the new commit and the release files are replaced. Installed apps only see a new version when the number goes up. You can still push a `v*` tag by hand.
 
-      git tag v0.2.0
-      git push origin v0.2.0
-
-  GitHub creates a *Release* with:
+  Each release has:
   - `DeveloperSecondBrain-Setup-<version>.exe`: Windows installer (no admin rights needed). **Updates itself.**
   - `secondbrain.exe`: Windows portable, nothing to install. Tells you when there is a new version.
   - `DeveloperSecondBrain-<version>-mac.dmg`: macOS, Apple Silicon and Intel. Tells you when there is a new version.
