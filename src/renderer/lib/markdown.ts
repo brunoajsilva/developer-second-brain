@@ -43,7 +43,7 @@ export interface AmbienteMd {
 const md = new MarkdownIt({
   html: true, // sanitizado por DOMPurify
   linkify: true,
-  breaks: false,
+  breaks: true, // uma quebra de linha simples conta (como no GitHub comments/Obsidian)
   typographer: false,
   highlight(code, lang) {
     const l = alias[lang.toLowerCase()] ?? lang.toLowerCase();

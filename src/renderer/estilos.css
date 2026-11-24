@@ -349,3 +349,17 @@ select.filtro{appearance:none;padding-right:14px;cursor:pointer}
 .md a.ligacao:hover{border-bottom-style:solid}
 .campo-tags input::-webkit-calendar-picker-indicator{display:none!important}
 .pag-l.ativo,.pag-l.ativo:hover{background:var(--tinta);color:var(--inv)}
+/* card modal: only the notes area scrolls; title and notes toolbar stay in place */
+.cm-principal{overflow:hidden}
+.cm-principal>section:first-of-type{flex:1;min-height:0}
+.notas-ler{flex:1;min-height:0;overflow:auto;padding-right:6px}
+.notas-ed{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.notas-ed .editor-md{flex:1;min-height:0}
+.notas-ed .cm-editor{flex:1;min-height:0;height:100%}
+.notas-ed .cm-scroller{overflow:auto}
+.cm-principal>section+section{flex:none;max-height:30%;overflow:auto}
+.cm-props>*{flex-shrink:0}
+/* docs: use more of wide screens, keep a comfortable margin */
+.artigo{padding:28px clamp(32px,4vw,88px) 40px}
+.artigo>.in{max-width:1600px}
+@media (min-width:2200px){.artigo>.in{font-size:16px}.toc{width:240px}}
