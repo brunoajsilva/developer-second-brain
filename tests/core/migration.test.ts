@@ -49,7 +49,7 @@ describe('legacy vault migration', () => {
 
     expect((await readDoc(v, 'Arquitetura/Visao.md')).text).toContain('](_attachments/imagem-1.png)');
     await expect(fs.stat(path.join(v, 'Docs', 'Arquitetura', '_attachments', 'imagem-1.png'))).resolves.toBeTruthy();
-    expect((await listDocs(v)).find((d) => d.path === 'Notas.md')?.title).toBe('Notas soltas');
+    expect((await readDoc(v, 'Notas.md')).text).toMatch(/^---\ntitle: Notas soltas\n---/);
   });
 
   it('is idempotent', async () => {

@@ -47,11 +47,3 @@ export const asList = (value: unknown): string[] => {
   return s ? s.split(',').map((x) => x.trim()).filter(Boolean) : [];
 };
 
-/** Title of a page: `title:` in the frontmatter, else the first "# heading", else the fallback. */
-export function titleFromMarkdown(text: string, fallback: string): string {
-  const parsed = parseFrontmatter(text);
-  const fromData = asText(parsed.data.title).trim();
-  if (fromData) return fromData;
-  const heading = parsed.body.match(/^#\s+(.+)$/m);
-  return heading ? heading[1].trim() : fallback;
-}

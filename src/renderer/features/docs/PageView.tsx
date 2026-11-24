@@ -182,8 +182,8 @@ export function PageView({ path, onNewSubPage, onDeleted, onMoved }: { path: str
       <AnimatePresence>{menu && <Menu anchor={menu} entries={menuEntries} onClose={() => setMenu(null)} />}</AnimatePresence>
       <AnimatePresence>
         {move && (
-          <Modal key="move" title="Move or rename page" description="Sub-pages move with it. [[Links]] keep working as long as the page title stays the same." onClose={() => setMove(null)}>
-            <label className="field"><span>File name</span><input className="input" autoFocus value={move.name} onChange={(e) => setMove({ ...move, name: e.target.value })} /></label>
+          <Modal key="move" title="Move or rename page" description="Sub-pages move with it. The file name is the page title, so [[links]] that use the old name need updating." onClose={() => setMove(null)}>
+            <label className="field"><span>Name</span><input className="input" autoFocus value={move.name} onChange={(e) => setMove({ ...move, name: e.target.value })} /></label>
             <label className="field">
               <span>Inside</span>
               <select className="input" value={move.parent} onChange={(e) => setMove({ ...move, parent: e.target.value })}>

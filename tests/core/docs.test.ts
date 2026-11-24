@@ -15,12 +15,12 @@ async function vault() {
 }
 
 describe('docs', () => {
-  it('creates, lists (title from the first #), reads and writes with a hash', async () => {
+  it('creates, lists (title = file name), reads and writes with a hash', async () => {
     const v = await vault();
     await createDoc(v, 'Architecture/ADR-001 Messaging.md', '# Messaging between Cards and MDK\n\ntext');
     const docs = await listDocs(v);
     expect(docs).toHaveLength(1);
-    expect(docs[0].title).toBe('Messaging between Cards and MDK');
+    expect(docs[0].title).toBe('ADR-001 Messaging');
     const doc = await readDoc(v, docs[0].path);
     const written = await writeDoc(v, docs[0].path, doc.text + '\nmore', doc.hash);
     expect(written.hash).not.toBe(doc.hash);

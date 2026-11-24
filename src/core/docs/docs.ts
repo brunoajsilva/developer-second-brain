@@ -1,9 +1,8 @@
-// Pages are Markdown files under Docs/. A page "A.md" can have sub-pages in the folder "A/".
+// Pages are Markdown files under Docs/. A page "A.md" is titled "A" and keeps its sub-pages in the folder "A/".
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { listMarkdownFiles, moveToTrash, pathExists, readTextFile, writeTextFile } from '../fs/file-store';
 import { ValidationError, resolveInside, toRelative } from '../fs/paths';
-import { titleFromMarkdown } from '../fs/frontmatter';
 import { ATTACHMENTS_DIR, DOCS_DIR } from '../vault/layout';
 import type { DocFile, DocSummary } from '../../shared/types';
 
@@ -12,6 +11,9 @@ const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp']);
 
 const docsDir = (vault: string) => path.join(vault, DOCS_DIR);
+
+/** A page's title is its file name, so renaming the file renames the page everywhere. */
+export const pageTitle = (file: string) => path.basename(file).replace(/\.md$/i, '');
 
 function assertPagePath(relativePath: string): void {
   if (!/\.md$/i.test(relativePath)) throw new ValidationError('page file names must end in .md');
@@ -28,8 +30,8 @@ export async function listDocs(vault: string): Promise<DocSummary[]> {
   const out: DocSummary[] = [];
   for (const file of await listMarkdownFiles(base, (n) => !n.startsWith('_'))) {
     if (path.basename(file).startsWith('_')) continue;
-    const { text, modified } = await readTextFile(file);
-    out.push({ path: toRelative(base, file), title: titleFromMarkdown(text, path.basename(file, '.md')), modified });
+    const { modified } = await readTextFile(file);
+    out.push({ path: toRelative(base, file), title: pageTitle(file), modified });
   }
   return out.sort((a, b) => a.path.localeCompare(b.path));
 }

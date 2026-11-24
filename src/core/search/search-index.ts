@@ -2,10 +2,11 @@
 import * as path from 'node:path';
 import MiniSearch from 'minisearch';
 import { listMarkdownFiles, readTextFile } from '../fs/file-store';
-import { parseFrontmatter, titleFromMarkdown } from '../fs/frontmatter';
+import { parseFrontmatter } from '../fs/frontmatter';
 import { toRelative } from '../fs/paths';
 import { listBoards, readCards } from '../boards/boards';
 import { DOCS_DIR } from '../vault/layout';
+import { pageTitle } from '../docs/docs';
 import type { Backlink, ItemKind, SearchResult } from '../../shared/types';
 
 interface IndexedItem {
@@ -33,7 +34,7 @@ export async function buildSearchIndex(vault: string): Promise<SearchIndex> {
     const { text } = await readTextFile(file);
     const ref = toRelative(base, file);
     const folder = path.posix.dirname(ref);
-    items.push({ id: 'd:' + ref, kind: 'doc', title: titleFromMarkdown(text, path.basename(file, '.md')), context: folder === '.' ? 'Docs' : folder, ref, text: parseFrontmatter(text).body });
+    items.push({ id: 'd:' + ref, kind: 'doc', title: pageTitle(file), context: folder === '.' ? 'Docs' : folder, ref, text: parseFrontmatter(text).body });
   }
   for (const board of await listBoards(vault)) {
     for (const card of await readCards(vault, board.id, board.columns)) {

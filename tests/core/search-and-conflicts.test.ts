@@ -22,9 +22,9 @@ describe('search and links', () => {
     expect(hits[0].kind).toBe('doc');
     expect(hits[0].excerpt).toContain('queue');
     expect(searchIndex(index, 'id', 'T', 'timeout')[0].kind).toBe('card');
-    expect(searchIndex(index, 'id', 'T', 'messag')[0].title).toBe('Messaging');
-    expect(findBacklinks(index, { kind: 'doc', title: 'Messaging', ref: 'Arch/ADR-001 Messaging.md' }).map((b) => b.title)).toEqual(['Fix timeout']);
-    expect(findBacklinks(index, { kind: 'card', title: 'Fix timeout', ref: 'sprint/' + card.id }).map((b) => b.title)).toEqual(['Messaging']);
+    expect(searchIndex(index, 'id', 'T', 'messag')[0].title).toBe('ADR-001 Messaging');
+    expect(findBacklinks(index, { kind: 'doc', title: 'ADR-001 Messaging', ref: 'Arch/ADR-001 Messaging.md' }).map((b) => b.title)).toEqual(['Fix timeout']);
+    expect(findBacklinks(index, { kind: 'card', title: 'Fix timeout', ref: 'sprint/' + card.id }).map((b) => b.title)).toEqual(['ADR-001 Messaging']);
   });
 });
 

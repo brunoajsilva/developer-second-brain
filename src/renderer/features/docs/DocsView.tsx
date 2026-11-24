@@ -139,7 +139,7 @@ export function DocsView({ collection, path, onNewPage }: { collection: string; 
       <AnimatePresence>
         {dialog?.kind === 'rename' && (
           <Modal key="rename" title={dialog.key === collection ? 'Rename collection' : 'Rename page'}
-            description={dialog.key === collection ? undefined : 'Renames the file (and its sub-pages folder). The heading inside the page stays as it is.'} onClose={() => setDialog(null)}>
+            description={dialog.key === collection ? undefined : 'The page title is its file name, so this renames the file and its sub-pages folder. [[Links]] that use the old name need updating.'} onClose={() => setDialog(null)}>
             <form className="stack" onSubmit={(e) => { e.preventDefault(); void rename(); }}>
               <input className="input" autoFocus value={dialog.name} onChange={(e) => setDialog({ ...dialog, name: e.target.value })} />
               {error && <p className="error-text">{error}</p>}
