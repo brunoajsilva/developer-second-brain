@@ -67,13 +67,13 @@ The renderer never touches the file system. It calls `api.someMethod(...)`, whic
   Each release has:
   - `DeveloperSecondBrain-Setup-<version>.exe`: Windows installer (no admin rights needed). **Updates itself.**
   - `secondbrain.exe`: Windows portable, nothing to install. Tells you when there is a new version.
-  - `DeveloperSecondBrain-<version>-mac.dmg`: macOS, Apple Silicon and Intel. Tells you when there is a new version.
+  - `DeveloperSecondBrain-<version>-mac-arm64.dmg` (Apple Silicon: M1 and later) and `…-mac-x64.dmg` (Intel Macs). Tell you when there is a new version.
   - `latest.yml` and `.blockmap`: used by the installed Windows app to update itself. Keep them in the release.
 
 ### Locally
     npm install
     npm run dist       # Windows: release/DeveloperSecondBrain-Setup-<version>.exe and release/secondbrain.exe
-    npm run dist:mac   # macOS:   release/DeveloperSecondBrain-<version>-mac.dmg
+    npm run dist:mac   # macOS:   release/DeveloperSecondBrain-<version>-mac-arm64.dmg and -mac-x64.dmg
 
 ## Updates
 

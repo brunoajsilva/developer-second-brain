@@ -84,7 +84,7 @@ export class UpdateService {
     const release = (await res.json()) as GithubRelease;
     const newer = newerRelease(release, this.status.current);
     if (!newer) return void this.set({ state: 'up-to-date', latest: release.tag_name.replace(/^v/i, '') });
-    this.downloadUrl = pickDownload(release, this.kind);
+    this.downloadUrl = pickDownload(release, this.kind, process.arch);
     this.set({ state: 'available', latest: newer.version });
   }
 

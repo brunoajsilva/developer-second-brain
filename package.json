@@ -1,7 +1,7 @@
 {
   "name": "developer-secondbrain",
   "productName": "Developer SecondBrain",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Docs and boards as Markdown files, organised in vaults.",
   "license": "MIT",
@@ -21,7 +21,7 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "dist": "npm run build && electron-builder --win nsis portable --x64 --publish never",
-    "dist:mac": "npm run build && electron-builder --mac dmg --universal --publish never",
+    "dist:mac": "npm run build && electron-builder --mac dmg --arm64 --x64 --publish never",
     "cli:install": "npm run build && npm link",
     "prepare": "npm run build"
   },
@@ -70,7 +70,8 @@
         {
           "target": "dmg",
           "arch": [
-            "universal"
+            "arm64",
+            "x64"
           ]
         }
       ],
@@ -81,7 +82,7 @@
       "icon": "build/icon.png"
     },
     "dmg": {
-      "artifactName": "DeveloperSecondBrain-${version}-mac.${ext}"
+      "artifactName": "DeveloperSecondBrain-${version}-mac-${arch}.${ext}"
     },
     "publish": [
       {

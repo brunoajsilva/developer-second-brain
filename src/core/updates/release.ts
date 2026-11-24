@@ -34,10 +34,10 @@ export function compareVersions(a: string, b: string): number {
 export type InstallKind = 'mac' | 'windows-installer' | 'windows-portable' | 'linux';
 
 /** The download that replaces what is installed now; the release page when there is no matching file. */
-export function pickDownload(release: GithubRelease, kind: InstallKind): string {
+export function pickDownload(release: GithubRelease, kind: InstallKind, arch = 'x64'): string {
   const find = (test: (name: string) => boolean) => release.assets.find((a) => test(a.name.toLowerCase()))?.browser_download_url;
   const url =
-    kind === 'mac' ? find((n) => n.endsWith('.dmg'))
+    kind === 'mac' ? find((n) => n.endsWith(`-${arch}.dmg`)) ?? find((n) => n.endsWith('.dmg'))
     : kind === 'windows-portable' ? find((n) => n.endsWith('.exe') && !n.includes('setup'))
     : kind === 'windows-installer' ? find((n) => n.endsWith('.exe') && n.includes('setup'))
     : find((n) => n.endsWith('.appimage'));
