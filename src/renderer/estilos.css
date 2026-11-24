@@ -379,3 +379,9 @@ select.filtro{appearance:none;padding-right:14px;cursor:pointer}
 .md table,.md pre,.md blockquote,.md details,.md .mermaid-src{margin-bottom:1em}
 .notas-ler .md{font-size:14px}
 .notas-ler .md h1{font-size:1.6em}
+/* list items breathe more; checklists get a hanging indent so wrapped lines align with the text */
+.md li+li{margin-top:.5em}
+.md li.tarefa{position:relative;padding-left:1.75em;list-style:none;margin-left:0}
+.md li.tarefa+li.tarefa{margin-top:.6em}
+.md li.tarefa>input.tarefa-cx,.md li.tarefa>p>input.tarefa-cx{position:absolute;left:0;top:.28em;margin:0}
+.md ul.tem-tarefas{padding-left:0}
