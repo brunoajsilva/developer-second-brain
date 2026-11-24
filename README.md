@@ -104,3 +104,9 @@ secondbrain            # opens the app; the terminal stays free
 To remove it: `npm unlink -g developer-secondbrain`.
 
 **Windows, with the portable executable:** the file is called `secondbrain.exe`. Put it in a folder (for example `C:\Tools`), add that folder to `PATH` and type `secondbrain` in a new terminal.
+
+## License
+
+[MIT](LICENSE) © 2026 Bruno Silva. Free to use, copy, modify and distribute, including commercially, as long as the copyright notice is kept.
+
+The app bundles open-source packages under their own licences (MIT, ISC, BSD, Apache-2.0, MPL-2.0, EPL-2.0 and the SIL Open Font License for the Geist font). `npm run build` lists all of them, with their licence texts, in `dist/THIRD_PARTY_NOTICES.txt`, which ships with the app.

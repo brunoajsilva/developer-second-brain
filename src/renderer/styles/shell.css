@@ -80,8 +80,7 @@
 
 /* Shared page scaffolding */
 .page-scroll { flex: 1; min-height: 0; overflow-y: auto; }
-.page-wide { max-width: 1180px; margin: 0 auto; padding: 18px 36px 56px; }
-.page-narrow { max-width: 860px; margin: 0 auto; padding: 18px 36px 56px; }
+.page-wide, .page-narrow { padding: 14px var(--gutter) 48px; }
 .view-head { display: flex; flex-direction: column; gap: 6px; }
 .view-head h1 { font-size: 26px; font-weight: 650; letter-spacing: -0.025em; }
 .view-head p { max-width: 640px; }

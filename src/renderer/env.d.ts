@@ -1,4 +1,5 @@
 declare module '*.css';
+declare module '*?url' { const url: string; export default url; }
 
 declare module 'markdown-it-footnote' { import type { PluginSimple } from 'markdown-it'; const p: PluginSimple; export default p; }
 declare module 'markdown-it-deflist' { import type { PluginSimple } from 'markdown-it'; const p: PluginSimple; export default p; }

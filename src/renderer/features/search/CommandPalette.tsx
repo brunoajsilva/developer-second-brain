@@ -18,11 +18,13 @@ export type PaletteTarget =
 interface Row { target: PaletteTarget; group: string; title: string; context: string; excerpt?: string; icon: ReactNode }
 
 /** ⌘K: jump to boards, collections and pages by name, full-text search, and quick actions. */
-export function CommandPalette({ open, actions, onClose, onSelect }: { open: boolean; actions: { label: string; run: () => void }[]; onClose: () => void; onSelect: (t: PaletteTarget) => void }) {
+export interface PaletteAction { label: string; keywords?: string[]; run: () => void }
+
+export function CommandPalette({ open, actions, onClose, onSelect }: { open: boolean; actions: PaletteAction[]; onClose: () => void; onSelect: (t: PaletteTarget) => void }) {
   return <AnimatePresence>{open && <Palette key="palette" actions={actions} onClose={onClose} onSelect={onSelect} />}</AnimatePresence>;
 }
 
-function Palette({ actions, onClose, onSelect }: { actions: { label: string; run: () => void }[]; onClose: () => void; onSelect: (t: PaletteTarget) => void }) {
+function Palette({ actions, onClose, onSelect }: { actions: PaletteAction[]; onClose: () => void; onSelect: (t: PaletteTarget) => void }) {
   const { vault, vaults, data } = useWorkspace();
   const [query, setQuery] = useState('');
   const [allVaults, setAllVaults] = useState(false);
@@ -63,7 +65,7 @@ function Palette({ actions, onClose, onSelect }: { actions: { label: string; run
         excerpt: plainText(r.excerpt), icon: r.kind === 'doc' ? <PageIcon size={16} /> : <InProgressIcon size={16} />
       });
     }
-    for (const a of actions.filter((a) => matches(a.label))) out.push({ target: { kind: 'action', ...a }, group: 'Actions', title: a.label, context: '', icon: <SparkIcon size={16} /> });
+    for (const a of actions.filter((a) => matches(a.label) || (!!term && (a.keywords ?? []).some((k) => k.includes(term))))) out.push({ target: { kind: 'action', label: a.label, run: a.run }, group: 'Actions', title: a.label, context: '', icon: <SparkIcon size={16} /> });
     return term ? out : out.slice(0, 6).concat(out.filter((r) => r.group === 'Actions'));
   }, [data, term, results, actions, vault.id, allVaults]);
 

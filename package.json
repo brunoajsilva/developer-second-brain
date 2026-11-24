@@ -4,6 +4,12 @@
   "version": "0.2.0",
   "private": true,
   "description": "Docs and boards as Markdown files, organised in vaults.",
+  "license": "MIT",
+  "author": "Bruno Silva",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/brunoajsilva/developer-second-brain.git"
+  },
   "main": "dist/main/index.cjs",
   "bin": {
     "secondbrain": "bin/secondbrain.cjs"
@@ -26,7 +32,8 @@
     },
     "files": [
       "dist/**/*",
-      "package.json"
+      "package.json",
+      "LICENSE"
     ],
     "win": {
       "target": [
@@ -76,6 +83,7 @@
     "mermaid": "^12.3.0",
     "minisearch": "^7.1.0",
     "motion": "^12.43.0",
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^7.0.2",

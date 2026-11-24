@@ -23,6 +23,7 @@ import { CreateLinkedPageDialog, EditCollectionDialog, NewCollectionDialog } fro
 import { CommandPalette, type PaletteTarget } from '../features/search/CommandPalette';
 import { ConflictsView } from '../features/conflicts/ConflictsView';
 import { QuickCapture } from '../features/capture/QuickCapture';
+import { TOOLS, findTool } from '../features/tools/registry';
 
 const SIDEBAR_KEY = 'secondbrain.sidebarCollapsed';
 const readCollapsed = () => { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch { return false; } };
@@ -176,6 +177,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
   const crumbs: Crumb[] = [{ label: vault.name, onClick: () => go({ kind: 'today' }) }];
   if (view.kind === 'today') crumbs.push({ label: 'Today' });
   if (view.kind === 'conflicts') crumbs.push({ label: 'Sync conflicts' });
+  if (view.kind === 'tool') crumbs.push({ label: 'Tools' }, { label: findTool(view.toolId)?.name ?? view.toolId });
   if (view.kind === 'board') crumbs.push({ label: 'Boards' }, { label: currentBoard?.name ?? view.boardId });
   if (view.kind === 'docs') {
     crumbs.push({ label: view.collection || 'Loose pages', onClick: () => go({ kind: 'docs', collection: view.collection, path: null }) });
@@ -209,6 +211,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     { label: 'New board', run: () => setDialog({ kind: 'new-board' }) },
     { label: 'New collection', run: () => setDialog({ kind: 'new-collection' }) },
     { label: 'Go to Today', run: () => go({ kind: 'today' }) },
+    ...TOOLS.map((t) => ({ label: `Open ${t.name}`, keywords: t.keywords, run: () => go({ kind: 'tool', toolId: t.id }) })),
     { label: 'Switch vault', run: onSwitchVault },
     { label: collapsed ? 'Expand sidebar' : 'Collapse sidebar', run: toggleSidebar }
   ];
@@ -228,6 +231,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
                 {view.kind === 'board' && <BoardView boardId={view.boardId} cardId={view.cardId} onOpenSettings={() => setDialog({ kind: 'board-settings', boardId: view.boardId })} />}
                 {view.kind === 'docs' && <DocsView collection={view.collection} path={view.path} onNewPage={(parent) => setDialog({ kind: 'new-page', parent })} />}
                 {view.kind === 'conflicts' && <ConflictsView />}
+                {view.kind === 'tool' && <ToolScreen toolId={view.toolId} />}
               </motion.div>
             </AnimatePresence>
           </main>
@@ -251,4 +255,11 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
       </AnimatePresence>
     </WorkspaceContext.Provider>
   );
+}
+
+function ToolScreen({ toolId }: { toolId: string }) {
+  const tool = findTool(toolId);
+  if (!tool) return <div className="page-scroll"><p className="empty-state">This tool does not exist.</p></div>;
+  const Component = tool.component;
+  return <Component />;
 }

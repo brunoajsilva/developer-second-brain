@@ -46,4 +46,6 @@
 
   --sidebar: 264px;
   --topbar: 52px;
+  /* one horizontal margin for every screen, so content lines up with the board */
+  --gutter: 24px;
 }

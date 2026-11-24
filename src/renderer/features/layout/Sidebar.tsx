@@ -10,6 +10,7 @@ import {
   BoardIcon, CollectionIcon, ConflictIcon, EditIcon, FolderOpenIcon, InboxIcon, LockIcon, PlusIcon, SearchIcon, SettingsIcon, SidebarIcon, SwitchIcon, TeamIcon, TodayIcon, TrashIcon, UserIcon
 } from '../../components/Icons';
 import { useWorkspace } from '../../app/workspace';
+import { TOOLS } from '../tools/registry';
 import type { View } from '../../app/navigation';
 
 interface SidebarProps {
@@ -94,6 +95,12 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
               })} />
           ))}
           {data && collections.length === 0 && !collapsed && <button className="nav-empty" onClick={dialogs.newCollection}>Create your first collection</button>}
+        </NavGroup>
+
+        <NavGroup title="Tools" collapsed={collapsed}>
+          {TOOLS.map((t) => (
+            <NavItem key={t.id} icon={t.icon} label={t.name} collapsed={collapsed} active={view.kind === 'tool' && view.toolId === t.id} onClick={() => go({ kind: 'tool', toolId: t.id })} />
+          ))}
         </NavGroup>
       </div>
 

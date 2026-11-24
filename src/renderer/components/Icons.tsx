@@ -40,5 +40,22 @@ export {
   Zap as CaptureIcon,
   Calendar as CalendarIcon,
   BookOpen as ReadIcon,
-  GripVertical as GripIcon
+  GripVertical as GripIcon,
+  Binary as Base64Icon,
+  Wrench as ToolsIcon,
+  Copy as CopyIcon,
+  Download as SaveIcon,
+  Upload as UploadIcon,
+  ClipboardPaste as PasteIcon,
+  Image as ImageIcon,
+  AudioLines as AudioIcon,
+  Film as VideoIcon,
+  Type as FontIcon,
+  Braces as JsonIcon,
+  FileCode as CodeIcon,
+  FileArchive as ArchiveIcon,
+  FileQuestionMark as UnknownFileIcon,
+  TriangleAlert as WarningIcon,
+  ArrowRightLeft as ConvertIcon,
+  Cpu as BinaryFileIcon
 } from 'lucide-react';

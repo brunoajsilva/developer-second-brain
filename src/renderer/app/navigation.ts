@@ -4,7 +4,8 @@ export type View =
   | { kind: 'today' }
   | { kind: 'board'; boardId: string; cardId?: string }
   | { kind: 'docs'; collection: string; path: string | null }
-  | { kind: 'conflicts' };
+  | { kind: 'conflicts' }
+  | { kind: 'tool'; toolId: string };
 
 const HISTORY_LIMIT = 60;
 const same = (a: View, b: View) => JSON.stringify(a) === JSON.stringify(b);
@@ -13,6 +14,7 @@ const same = (a: View, b: View) => JSON.stringify(a) === JSON.stringify(b);
 export function screenKey(v: View): string {
   if (v.kind === 'board') return 'board:' + v.boardId;
   if (v.kind === 'docs') return 'docs:' + v.collection;
+  if (v.kind === 'tool') return 'tool:' + v.toolId;
   return v.kind;
 }
 
