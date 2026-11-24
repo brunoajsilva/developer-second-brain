@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Api } from '../../shared/api';
-import type { IpcResult, VaultChange, VaultInfo, VaultRecord } from '../../shared/types';
+import type { IpcResult, UpdateStatus, VaultChange, VaultInfo, VaultRecord } from '../../shared/types';
 import { SettingsStore, getVaultStatuses } from '../../core/settings/settings-store';
 import { assertCanRegister, createVault, initializeVault, inspectFolder, newVaultId, readVaultMeta } from '../../core/vault/vault';
 import { migrateVault } from '../../core/vault/migration';
@@ -25,6 +25,11 @@ export interface Host {
   pickFolder(title: string): Promise<string | null>;
   revealInFolder(absolutePath: string): void;
   notifyVaultChanged(change: VaultChange): void;
+  updates: {
+    status(): UpdateStatus;
+    check(): Promise<UpdateStatus>;
+    install(): Promise<void>;
+  };
 }
 
 const MAX_SEARCH_RESULTS = 40;
@@ -103,6 +108,9 @@ export class AppService {
     setUserName: async (name) => void (await this.settings.update((s) => void (s.userName = name.trim().slice(0, 60)))),
     setOpenLastVault: async (value) => void (await this.settings.update((s) => void (s.openLastVault = !!value))),
     setActiveVault: async (id) => void (await this.settings.update((s) => void (s.activeVaultId = id))),
+    getUpdateStatus: async () => this.host.updates.status(),
+    checkForUpdates: async () => this.host.updates.check(),
+    installUpdate: async () => this.host.updates.install(),
     setOneOnOneVault: async (id) => void (await this.settings.update((s) => void (s.oneOnOneVaultId = id))),
 
     listVaults: async () => getVaultStatuses(await this.settings.read()),

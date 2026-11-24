@@ -1,6 +1,6 @@
 # Developer SecondBrain
 
-Docs and boards as plain Markdown files, in vaults (folders) you choose. No install needed: a single portable `.exe` on Windows.
+Docs and boards as plain Markdown files, in vaults (folders) you choose. On Windows, an installer that updates itself or a portable `.exe`; on macOS, a `.dmg`.
 
 ## Using it
 - Open the app, type your name, then create a vault (or open a folder shared on your sync drive).
@@ -56,22 +56,42 @@ The renderer never touches the file system. It calls `api.someMethod(...)`, whic
     npm run typecheck
     npm run build      # compiles to dist/
 
-## Building the portable .exe
+## Building the apps
 
 ### On GitHub (recommended, nothing to install)
-`.github/workflows/build.yml` builds the `.exe` on a Windows runner.
+`.github/workflows/build.yml` builds the Windows `.exe` files on a Windows runner and the macOS `.dmg` on a Mac runner.
 
-- **On every push to `main`** (or manually, in *Actions → Build → Run workflow*): runs the tests and builds the `.exe`. Download it from *Actions →* the run *→ Artifacts* (kept for 30 days).
-- **To publish a version** with a permanent download, push a tag starting with `v` (it should match `package.json`):
+- **On every push to `main`** (or manually, in *Actions → Build → Run workflow*): runs the tests and builds everything. Download it from *Actions →* the run *→ Artifacts* (kept for 30 days).
+- **To publish a version**, bump `version` in `package.json`, then push a tag starting with `v` that matches it:
 
       git tag v0.2.0
       git push origin v0.2.0
 
-  GitHub creates a *Release* with `secondbrain.exe`.
+  GitHub creates a *Release* with:
+  - `DeveloperSecondBrain-Setup-<version>.exe`: Windows installer (no admin rights needed). **Updates itself.**
+  - `secondbrain.exe`: Windows portable, nothing to install. Tells you when there is a new version.
+  - `DeveloperSecondBrain-<version>-mac.dmg`: macOS, Apple Silicon and Intel. Tells you when there is a new version.
+  - `latest.yml` and `.blockmap`: used by the installed Windows app to update itself. Keep them in the release.
 
-### On your PC (Windows, Node.js 20+)
+### Locally
     npm install
-    npm run dist       # release/secondbrain.exe
+    npm run dist       # Windows: release/DeveloperSecondBrain-Setup-<version>.exe and release/secondbrain.exe
+    npm run dist:mac   # macOS:   release/DeveloperSecondBrain-<version>-mac.dmg
+
+## Updates
+
+The app checks the latest GitHub release 15 seconds after it starts and every 6 hours after that. You can also check by hand: click your name at the bottom of the sidebar, then *Check for updates*.
+
+- **Windows, installed:** the new version downloads in the background. It installs when you close the app, or straight away with *Restart* at the bottom of the sidebar.
+- **macOS and the portable `.exe`:** a notice at the bottom of the sidebar offers the download. macOS only lets an app replace itself when it is signed with an Apple Developer ID, which this one isn't.
+
+## Opening it on macOS the first time
+
+The app is not from the App Store and isn't signed with an Apple certificate, so macOS blocks it the first time. Drag it to *Applications*, try to open it once, then go to *System Settings → Privacy & Security → Open Anyway*. Or, in Terminal:
+
+    xattr -dr com.apple.quarantine "/Applications/Developer SecondBrain.app"
+
+You only need to do this once per version.
 
 ## Installing on another computer (from the public repository)
 

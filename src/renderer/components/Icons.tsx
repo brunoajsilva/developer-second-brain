@@ -70,5 +70,8 @@ export {
   TrendingUp as ImproveIcon,
   StickyNote as NoteIcon,
   Play as StartIcon,
-  ClipboardCheck as ReviewIcon
+  ClipboardCheck as ReviewIcon,
+  ArrowDownToLine as DownloadIcon,
+  RotateCw as RestartIcon,
+  RefreshCw as CheckUpdatesIcon
 } from 'lucide-react';

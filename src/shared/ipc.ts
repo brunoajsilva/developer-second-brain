@@ -1,4 +1,4 @@
-import type { IpcResult, VaultChange } from './types';
+import type { IpcResult, UpdateStatus, VaultChange } from './types';
 
 /** IPC channel names. Kept in one place so main and preload never drift apart. */
 export const IpcChannel = {
@@ -7,7 +7,9 @@ export const IpcChannel = {
   /** main → renderer: a file in an open vault changed on disk. */
   vaultChanged: 'vault:changed',
   /** main → renderer: the global quick-capture shortcut was pressed. */
-  quickCapture: 'app:quick-capture'
+  quickCapture: 'app:quick-capture',
+  /** main → renderer: the update status changed (found, downloading, ready…). */
+  updateStatus: 'app:update-status'
 } as const;
 
 /** What the preload script exposes on `window.bridge`. */
@@ -15,4 +17,5 @@ export interface Bridge {
   invoke(method: string, args: unknown[]): Promise<IpcResult>;
   onVaultChanged(listener: (change: VaultChange) => void): () => void;
   onQuickCapture(listener: () => void): () => void;
+  onUpdateStatus(listener: (status: UpdateStatus) => void): () => void;
 }

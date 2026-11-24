@@ -7,7 +7,8 @@ import { tempDir } from '../core/helpers';
 const services: AppService[] = [];
 async function service() {
   const dir = await tempDir('service');
-  const s = new AppService(path.join(dir, 'settings.json'), { pickFolder: async () => null, revealInFolder: () => undefined, notifyVaultChanged: () => undefined });
+  const s = new AppService(path.join(dir, 'settings.json'), { pickFolder: async () => null, revealInFolder: () => undefined, notifyVaultChanged: () => undefined,
+    updates: { status: () => ({ mode: 'off', current: '0.0.0', state: 'idle' }), check: async () => ({ mode: 'off', current: '0.0.0', state: 'idle' }), install: async () => undefined } });
   services.push(s);
   return { s, dir };
 }

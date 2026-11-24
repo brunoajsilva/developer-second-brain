@@ -20,7 +20,8 @@
     "start": "electron .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "dist": "npm run build && electron-builder --win portable --x64 --publish never",
+    "dist": "npm run build && electron-builder --win nsis portable --x64 --publish never",
+    "dist:mac": "npm run build && electron-builder --mac dmg --universal --publish never",
     "cli:install": "npm run build && npm link",
     "prepare": "npm run build"
   },
@@ -38,6 +39,12 @@
     "win": {
       "target": [
         {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
           "target": "portable",
           "arch": [
             "x64"
@@ -49,13 +56,40 @@
     "portable": {
       "artifactName": "secondbrain.exe"
     },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "artifactName": "DeveloperSecondBrain-Setup-${version}.${ext}",
+      "shortcutName": "Developer SecondBrain",
+      "createDesktopShortcut": true
+    },
     "mac": {
       "icon": "build/icon-mac.png",
-      "category": "public.app-category.productivity"
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
+      "identity": "-",
+      "hardenedRuntime": false
     },
     "linux": {
       "icon": "build/icon.png"
-    }
+    },
+    "dmg": {
+      "artifactName": "DeveloperSecondBrain-${version}-mac.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "brunoajsilva",
+        "repo": "developer-second-brain"
+      }
+    ]
   },
   "devDependencies": {
     "@codemirror/autocomplete": "^6.18.0",
@@ -99,6 +133,7 @@
     }
   },
   "dependencies": {
+    "electron-updater": "^6.8.11",
     "highlight.js": "^11.12.0",
     "markdown-it-abbr": "^2.0.0",
     "markdown-it-deflist": "^4.0.0",

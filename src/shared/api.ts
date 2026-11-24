@@ -1,5 +1,5 @@
 import type {
-  Backlink, Board, Card, CardInput, Column, ConflictCopy, DocFile, DocSummary, ItemKind, OpenFolderResult, FeedbackEntry, OneOnOnePerson, SearchResult, Settings, TimeOffEntry, TimeOffPerson, VaultInfo
+  Backlink, Board, Card, CardInput, Column, ConflictCopy, DocFile, DocSummary, ItemKind, OpenFolderResult, FeedbackEntry, OneOnOnePerson, SearchResult, Settings, TimeOffEntry, TimeOffPerson, UpdateStatus, VaultInfo
 } from './types';
 
 /**
@@ -13,6 +13,11 @@ export interface Api {
   setOpenLastVault(value: boolean): Promise<void>;
   setActiveVault(vaultId: string): Promise<void>;
   setOneOnOneVault(vaultId: string): Promise<void>;
+  /** App updates (from GitHub releases). */
+  getUpdateStatus(): Promise<UpdateStatus>;
+  checkForUpdates(): Promise<UpdateStatus>;
+  /** Restarts into a downloaded update, or opens the download of a newer version. */
+  installUpdate(): Promise<void>;
 
   // vaults
   listVaults(): Promise<VaultInfo[]>;

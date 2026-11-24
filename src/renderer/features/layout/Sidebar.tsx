@@ -7,9 +7,12 @@ import { spring } from '../../components/motion';
 import { Menu, anchorFrom, type MenuAnchor, type MenuEntry } from '../../components/Menu';
 import { Avatar } from '../../components/Avatar';
 import {
-  BoardIcon, CalendarIcon, CollectionIcon, PeopleIcon, ConflictIcon, EditIcon, FolderOpenIcon, InboxIcon, LockIcon, PlusIcon, SearchIcon, SettingsIcon, SidebarIcon, SwitchIcon, TeamIcon, TodayIcon, TrashIcon, UserIcon
+  BoardIcon, CalendarIcon, CheckUpdatesIcon, CollectionIcon, PeopleIcon, ConflictIcon, EditIcon, FolderOpenIcon, InboxIcon, LockIcon, PlusIcon, SearchIcon, SettingsIcon, SidebarIcon, SwitchIcon, TeamIcon, TodayIcon, TrashIcon, UserIcon
 } from '../../components/Icons';
 import { useWorkspace } from '../../app/workspace';
+import { useToast } from '../../components/Toast';
+import { UpdateAlert } from '../updates/UpdateAlert';
+import { describeCheck, useUpdateStatus } from '../updates/useUpdateStatus';
 import { TOOLS } from '../tools/registry';
 import { outOn, todayIso } from '../time-off/calendar';
 import type { View } from '../../app/navigation';
@@ -31,6 +34,9 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
   const { vault, vaults, data, settings, go, dialogs } = useWorkspace();
   const [menu, setMenu] = useState<{ anchor: MenuAnchor & { align?: 'start' | 'end'; side?: 'below' | 'above' }; entries: MenuEntry[] } | null>(null);
   const activeDocs = view.kind === 'docs' ? view.collection : null;
+  const update = useUpdateStatus();
+  const toast = useToast();
+  const checkForUpdates = () => void api.checkForUpdates().then((s) => { const r = describeCheck(s); toast(r.text, r.tone); }).catch(() => toast("Couldn't check for updates.", 'error'));
 
   const vaultMenu = (el: Element) => setMenu({
     anchor: anchorFrom(el, 'start', 'below'),
@@ -52,7 +58,9 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
       { label: 'Team', icon: <TeamIcon size={15} />, onSelect: dialogs.team },
       { separator: true },
       { label: 'Search', icon: <SearchIcon size={15} />, hint: shortcut('mod+K'), onSelect: onSearch },
-      { label: 'Collapse sidebar', icon: <SidebarIcon size={15} />, hint: shortcut('mod+\\'), onSelect: onToggle }
+      { label: 'Collapse sidebar', icon: <SidebarIcon size={15} />, hint: shortcut('mod+\\'), onSelect: onToggle },
+      { separator: true },
+      { label: 'Check for updates', icon: <CheckUpdatesIcon size={15} />, hint: update ? `v${update.current}` : undefined, onSelect: checkForUpdates }
     ]
   });
 
@@ -109,6 +117,8 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
           ))}
         </NavGroup>
       </div>
+
+      <UpdateAlert status={update} collapsed={collapsed} />
 
       <AnimatePresence>
         {(data?.conflicts.length ?? 0) > 0 && (

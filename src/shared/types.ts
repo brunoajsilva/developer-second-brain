@@ -214,3 +214,19 @@ export class ApiError extends Error {
     this.data = data;
   }
 }
+
+/** How this copy of the app gets new versions: installs them itself, only tells, or not at all (development). */
+export type UpdateMode = 'auto' | 'notify' | 'off';
+
+export interface UpdateStatus {
+  mode: UpdateMode;
+  /** Installed version. */
+  current: string;
+  state: 'idle' | 'checking' | 'up-to-date' | 'available' | 'downloading' | 'ready' | 'error';
+  /** Newest published version, when one was found. */
+  latest?: string;
+  /** Download progress, 0–100. */
+  progress?: number;
+  checkedAt?: number;
+  message?: string;
+}
