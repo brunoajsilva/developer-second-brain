@@ -6,6 +6,8 @@ export interface VaultRecord {
   path: string;
   /** Local flag: a vault only for me (shows a lock). */
   personal?: boolean;
+  /** Features this person turned off in this vault (see renderer/app/features.ts). Local, never written to the vault. */
+  hiddenFeatures?: string[];
 }
 
 export interface VaultInfo extends VaultRecord {

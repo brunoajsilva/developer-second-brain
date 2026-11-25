@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import type { Settings, VaultInfo } from '../../shared/types';
 import type { VaultData } from './useVaultData';
 import type { View } from './navigation';
+import type { FeatureCheck } from './features';
 
 /** What every screen of an open vault can reach without prop drilling. */
 export interface Workspace {
@@ -20,12 +21,15 @@ export interface Workspace {
   /** Resolves a [[link]]: "#id" opens a card, otherwise a page by title or file name (offering to create it). */
   openLink: (target: string, folderHint?: string) => void;
   collectionOf: (path: string) => string;
+  /** Whether a feature is shown in this vault (Settings › features). */
+  enabled: FeatureCheck;
   /** Global dialogs any screen can open. */
   dialogs: {
     newBoard: () => void;
     newCollection: () => void;
     setName: () => void;
     team: () => void;
+    settings: () => void;
   };
 }
 

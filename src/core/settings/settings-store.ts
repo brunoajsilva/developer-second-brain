@@ -57,9 +57,20 @@ function normalize(raw: unknown): Settings {
   const vaults: VaultRecord[] = Array.isArray(j.vaults)
     ? j.vaults
         .filter((v): v is Record<string, unknown> => !!v && typeof v.id === 'string' && typeof v.path === 'string')
-        .map((v) => ({ id: v.id as string, name: String(v.name ?? ''), path: v.path as string, personal: v.personal === true }))
+        .map((v): VaultRecord => {
+          const record: VaultRecord = { id: v.id as string, name: String(v.name ?? ''), path: v.path as string, personal: v.personal === true };
+          const hidden = cleanFeatureIds(v.hiddenFeatures);
+          if (hidden.length) record.hiddenFeatures = hidden;
+          return record;
+        })
     : [];
   return { userName: String(j.userName ?? ''), openLastVault: j.openLastVault === true, activeVaultId: String(j.activeVaultId ?? ''), vaults, oneOnOneVaultId: String(j.oneOnOneVaultId ?? '') };
+}
+
+/** Unique, non-empty feature ids; anything else is dropped. */
+export function cleanFeatureIds(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return [...new Set(raw.filter((x): x is string => typeof x === 'string').map((x) => x.trim()).filter((x) => x && x.length <= 60))];
 }
 
 /** Status of each registered vault: available, or why not (missing folder, a different vault in the folder). */

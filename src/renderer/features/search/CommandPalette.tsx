@@ -25,7 +25,7 @@ export function CommandPalette({ open, actions, onClose, onSelect }: { open: boo
 }
 
 function Palette({ actions, onClose, onSelect }: { actions: PaletteAction[]; onClose: () => void; onSelect: (t: PaletteTarget) => void }) {
-  const { vault, vaults, data } = useWorkspace();
+  const { vault, vaults, data, enabled } = useWorkspace();
   const [query, setQuery] = useState('');
   const [allVaults, setAllVaults] = useState(false);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -46,11 +46,13 @@ function Palette({ actions, onClose, onSelect }: { actions: PaletteAction[]; onC
     const out: Row[] = [];
     if (!data) return out;
     const matches = (s: string) => !term || s.toLowerCase().includes(term);
-    for (const b of data.boards.filter((b) => matches(b.name))) out.push({ target: { kind: 'board', id: b.id, name: b.name }, group: 'Jump to', title: b.name, context: 'Board', icon: <BoardIcon size={16} /> });
+    const boardsOn = enabled('boards');
+    const docsOn = enabled('docs');
+    if (boardsOn) for (const b of data.boards.filter((b) => matches(b.name))) out.push({ target: { kind: 'board', id: b.id, name: b.name }, group: 'Jump to', title: b.name, context: 'Board', icon: <BoardIcon size={16} /> });
     const collections = [...new Set(data.docs.filter((d) => d.path.includes('/')).map((d) => d.path.split('/')[0]))].sort();
-    for (const c of collections.filter(matches)) out.push({ target: { kind: 'collection', name: c }, group: 'Jump to', title: c, context: 'Collection', icon: <CollectionIcon size={16} /> });
+    if (docsOn) for (const c of collections.filter(matches)) out.push({ target: { kind: 'collection', name: c }, group: 'Jump to', title: c, context: 'Collection', icon: <CollectionIcon size={16} /> });
     const seen = new Set<string>();
-    if (term) {
+    if (term && docsOn) {
       for (const d of data.docs.filter((d) => matches(d.title)).slice(0, 8)) {
         seen.add(d.path);
         const context = d.path.includes('/') ? d.path.slice(0, d.path.lastIndexOf('/')) : 'Page';
@@ -59,6 +61,8 @@ function Palette({ actions, onClose, onSelect }: { actions: PaletteAction[]; onC
     }
     for (const r of results) {
       if (r.kind === 'doc' && r.vaultId === vault.id && seen.has(r.ref)) continue;
+      // other vaults have their own settings; only this vault's choice is known here
+      if (r.vaultId === vault.id && (r.kind === 'doc' ? !docsOn : !boardsOn)) continue;
       out.push({
         target: { kind: 'result', result: r }, group: 'Matches in text', title: r.title,
         context: `${r.kind === 'doc' ? 'Page' : 'Card'} in ${r.context}${allVaults ? ` (${r.vaultName})` : ''}`,
@@ -67,7 +71,7 @@ function Palette({ actions, onClose, onSelect }: { actions: PaletteAction[]; onC
     }
     for (const a of actions.filter((a) => matches(a.label) || (!!term && (a.keywords ?? []).some((k) => k.includes(term))))) out.push({ target: { kind: 'action', label: a.label, run: a.run }, group: 'Actions', title: a.label, context: '', icon: <SparkIcon size={16} /> });
     return term ? out : out.slice(0, 6).concat(out.filter((r) => r.group === 'Actions'));
-  }, [data, term, results, actions, vault.id, allVaults]);
+  }, [data, term, results, actions, vault.id, allVaults, enabled]);
 
   useEffect(() => setActive(0), [term, allVaults]);
   useEffect(() => {

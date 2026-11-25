@@ -26,6 +26,8 @@ import { QuickCapture } from '../features/capture/QuickCapture';
 import { TOOLS, findTool } from '../features/tools/registry';
 import { TimeOffView } from '../features/time-off/TimeOffView';
 import { PeopleView } from '../features/people/PeopleView';
+import { SettingsDialog } from '../features/settings/SettingsDialog';
+import { featureCheck, featureOfView, toolFeature } from './features';
 
 const SIDEBAR_KEY = 'secondbrain.sidebarCollapsed';
 const readCollapsed = () => { try { return localStorage.getItem(SIDEBAR_KEY) === '1'; } catch { return false; } };
@@ -87,7 +89,7 @@ function Root() {
 type Dialog =
   | { kind: 'new-board' } | { kind: 'new-collection' } | { kind: 'edit-collection'; collection: string } | { kind: 'name' } | { kind: 'team' }
   | { kind: 'link'; title: string; parent: string } | { kind: 'new-page'; parent: string } | { kind: 'capture'; boardId?: string }
-  | { kind: 'board-settings'; boardId: string };
+  | { kind: 'board-settings'; boardId: string } | { kind: 'settings' };
 
 function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSettingsChanged }: {
   vault: VaultInfo; vaults: VaultInfo[]; settings: Settings; onOpenVault: (id: string) => void; onSwitchVault: () => void; onSettingsChanged: () => void;
@@ -100,6 +102,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
   const [palette, setPalette] = useState(false);
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const { data, reload, openCountByBoard, collectionOf, collections } = useVaultData(vault.id, tick);
+  const enabled = useMemo(() => featureCheck(vault.hiddenFeatures), [vault.hiddenFeatures]);
   const failureKey = data?.failures.join('|') ?? '';
   useEffect(() => { if (failureKey) toast(`Could not load ${failureKey.split('|').join('; ')}`, 'error'); }, [failureKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -113,7 +116,14 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     });
     return () => { off(); clearTimeout(timer); };
   }, [vault.id]);
-  useEffect(() => window.bridge.onQuickCapture(() => setDialog({ kind: 'capture' })), []);
+  useEffect(() => window.bridge.onQuickCapture(() => {
+    if (enabled('boards')) setDialog({ kind: 'capture' });
+    else toast('Boards are turned off in this vault. Turn them on in Settings.', 'error');
+  }), [enabled, toast]);
+
+  // a screen whose feature was just turned off falls back to Today
+  const viewFeature = featureOfView(view);
+  useEffect(() => { if (viewFeature && !enabled(viewFeature)) go({ kind: 'today' }, true); }, [viewFeature, enabled, go]);
 
   const toggleSidebar = useCallback(() => setCollapsed((c) => {
     try { localStorage.setItem(SIDEBAR_KEY, c ? '0' : '1'); } catch { /* storage unavailable */ }
@@ -126,6 +136,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     if (!(e.ctrlKey || e.metaKey)) return;
     const key = e.key.toLowerCase();
     if (key === 'k') { e.preventDefault(); setPalette((p) => !p); }
+    else if (key === ',') { e.preventDefault(); setDialog({ kind: 'settings' }); }
     else if (key === '\\') { e.preventDefault(); toggleSidebar(); }
     else if (e.shiftKey && key === 'o') { e.preventDefault(); onSwitchVault(); }
     else if (/^[1-9]$/.test(e.key)) {
@@ -167,16 +178,17 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     vault, vaults, settings, data, tick,
     reload: () => setTick((n) => n + 1),
     refreshSettings: onSettingsChanged,
-    go, openCard, openDoc, openLink, collectionOf,
+    go, openCard, openDoc, openLink, collectionOf, enabled,
     dialogs: {
       newBoard: () => setDialog({ kind: 'new-board' }),
       newCollection: () => setDialog({ kind: 'new-collection' }),
       setName: () => setDialog({ kind: 'name' }),
-      team: () => setDialog({ kind: 'team' })
+      team: () => setDialog({ kind: 'team' }),
+      settings: () => setDialog({ kind: 'settings' })
     }
-  }), [vault, vaults, settings, data, tick, go, openCard, openDoc, openLink, collectionOf]);
+  }), [vault, vaults, settings, data, tick, go, openCard, openDoc, openLink, collectionOf, enabled]);
 
-  const myOpenCount = data ? data.cards.filter((c) => c.assignee === settings.userName && !isDoneCard(data.boards, c)).length : 0;
+  const myOpenCount = data && enabled('boards') ? data.cards.filter((c) => c.assignee === settings.userName && !isDoneCard(data.boards, c)).length : 0;
   const currentBoard = view.kind === 'board' ? data?.boards.find((b) => b.id === view.boardId) : undefined;
 
   const crumbs: Crumb[] = [{ label: vault.name, onClick: () => go({ kind: 'today' }) }];
@@ -196,12 +208,14 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     if (view.path) crumbs.push({ label: data?.docs.find((d) => d.path === view.path)?.title ?? view.path });
   }
 
+  const boardsOn = enabled('boards');
+  const docsOn = enabled('docs');
   const newEntries: MenuEntry[] = [
-    { label: currentBoard ? `Card in ${currentBoard.name}` : 'Card', icon: NEW_MENU_ICONS.card, hint: isMac ? '⌘⇧N' : 'Ctrl+Shift+N', onSelect: () => setDialog({ kind: 'capture', boardId: currentBoard?.id }) },
-    { label: 'Page', icon: NEW_MENU_ICONS.page, onSelect: () => setDialog({ kind: 'new-page', parent: view.kind === 'docs' ? view.collection : '' }) },
-    { separator: true },
-    { label: 'Board', icon: NEW_MENU_ICONS.board, onSelect: () => setDialog({ kind: 'new-board' }) },
-    { label: 'Collection', icon: NEW_MENU_ICONS.collection, onSelect: () => setDialog({ kind: 'new-collection' }) }
+    ...(boardsOn ? [{ label: currentBoard ? `Card in ${currentBoard.name}` : 'Card', icon: NEW_MENU_ICONS.card, hint: isMac ? '⌘⇧N' : 'Ctrl+Shift+N', onSelect: () => setDialog({ kind: 'capture', boardId: currentBoard?.id }) }] : []),
+    ...(docsOn ? [{ label: 'Page', icon: NEW_MENU_ICONS.page, onSelect: () => setDialog({ kind: 'new-page', parent: view.kind === 'docs' ? view.collection : '' }) }] : []),
+    ...(boardsOn || docsOn ? [{ separator: true } as const] : []),
+    ...(boardsOn ? [{ label: 'Board', icon: NEW_MENU_ICONS.board, onSelect: () => setDialog({ kind: 'new-board' }) }] : []),
+    ...(docsOn ? [{ label: 'Collection', icon: NEW_MENU_ICONS.collection, onSelect: () => setDialog({ kind: 'new-collection' }) }] : [])
   ];
 
   const jump = (target: PaletteTarget) => {
@@ -218,14 +232,15 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
     }
   };
   const paletteActions = [
-    { label: 'New card', run: () => setDialog({ kind: 'capture', boardId: currentBoard?.id }) },
-    { label: 'New page', run: () => setDialog({ kind: 'new-page', parent: view.kind === 'docs' ? view.collection : '' }) },
-    { label: 'New board', run: () => setDialog({ kind: 'new-board' }) },
-    { label: 'New collection', run: () => setDialog({ kind: 'new-collection' }) },
+    ...(boardsOn ? [{ label: 'New card', run: () => setDialog({ kind: 'capture', boardId: currentBoard?.id }) }] : []),
+    ...(docsOn ? [{ label: 'New page', run: () => setDialog({ kind: 'new-page', parent: view.kind === 'docs' ? view.collection : '' }) }] : []),
+    ...(boardsOn ? [{ label: 'New board', run: () => setDialog({ kind: 'new-board' }) }] : []),
+    ...(docsOn ? [{ label: 'New collection', run: () => setDialog({ kind: 'new-collection' }) }] : []),
     { label: 'Go to Today', run: () => go({ kind: 'today' }) },
-    { label: 'Go to People (1:1s, feedback and reviews)', keywords: ['1:1', 'one on one', 'feedback', 'people', 'manager', 'review', 'performance'], run: () => go({ kind: 'people' }) },
-    { label: 'Go to Time off', keywords: ['vacation', 'holiday', 'leave', 'férias', 'absence', 'calendar'], run: () => go({ kind: 'time-off' }) },
-    ...TOOLS.map((t) => ({ label: `Open ${t.name}`, keywords: t.keywords, run: () => go({ kind: 'tool', toolId: t.id }) })),
+    ...(enabled('people') ? [{ label: 'Go to People (1:1s, feedback and reviews)', keywords: ['1:1', 'one on one', 'feedback', 'people', 'manager', 'review', 'performance'], run: () => go({ kind: 'people' }) }] : []),
+    ...(enabled('time-off') ? [{ label: 'Go to Time off', keywords: ['vacation', 'holiday', 'leave', 'férias', 'absence', 'calendar'], run: () => go({ kind: 'time-off' }) }] : []),
+    ...TOOLS.filter((t) => enabled(toolFeature(t.id))).map((t) => ({ label: `Open ${t.name}`, keywords: t.keywords, run: () => go({ kind: 'tool', toolId: t.id }) })),
+    { label: 'Settings: features in this vault', keywords: ['settings', 'preferences', 'features', 'tools', 'hide', 'show', 'toggle', 'configurações'], run: () => setDialog({ kind: 'settings' }) },
     { label: 'Switch vault', run: onSwitchVault },
     { label: collapsed ? 'Expand sidebar' : 'Collapse sidebar', run: toggleSidebar }
   ];
@@ -263,6 +278,7 @@ function OpenVault({ vault, vaults, settings, onOpenVault, onSwitchVault, onSett
         {dialog?.kind === 'new-page' && <NewPageDialog key="np" parent={dialog.parent} onClose={closeDialog} />}
         {dialog?.kind === 'team' && <TeamDialog key="tm" onClose={closeDialog} />}
         {dialog?.kind === 'name' && <NameDialog key="nm" current={settings.userName} onClose={closeDialog} onSaved={() => { onSettingsChanged(); reload(); }} />}
+        {dialog?.kind === 'settings' && <SettingsDialog key="st" onClose={closeDialog} />}
         {dialog?.kind === 'capture' && <QuickCapture key="qc" boardId={dialog.boardId} onClose={closeDialog} />}
         {dialog?.kind === 'board-settings' && data?.boards.find((b) => b.id === dialog.boardId) && (
           <BoardSettingsDialog key="bs" board={data.boards.find((b) => b.id === dialog.boardId)!} cardCount={data.cards.filter((c) => c.board === dialog.boardId).length}

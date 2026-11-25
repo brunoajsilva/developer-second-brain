@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import type { Api } from '../../shared/api';
 import type { IpcResult, UpdateStatus, VaultChange, VaultInfo, VaultRecord } from '../../shared/types';
-import { SettingsStore, getVaultStatuses } from '../../core/settings/settings-store';
+import { SettingsStore, cleanFeatureIds, getVaultStatuses } from '../../core/settings/settings-store';
 import { assertCanRegister, createVault, initializeVault, inspectFolder, newVaultId, readVaultMeta } from '../../core/vault/vault';
 import { migrateVault } from '../../core/vault/migration';
 import { addTeamMember, listPeople, listTeam, removeTeamMember } from '../../core/vault/team';
@@ -82,6 +82,7 @@ export class AppService {
   private async register(meta: { id: string; name: string }, folder: string, personal?: boolean): Promise<VaultInfo> {
     const previous = (await this.settings.read()).vaults.find((v) => v.id === meta.id);
     const record: VaultRecord = { id: meta.id, name: meta.name, path: folder, personal: personal ?? previous?.personal ?? false };
+    if (previous?.hiddenFeatures?.length) record.hiddenFeatures = previous.hiddenFeatures;
     await this.settings.update((s) => {
       s.vaults = s.vaults.filter((v) => v.id !== record.id).concat(record);
       s.activeVaultId = record.id;
@@ -138,6 +139,14 @@ export class AppService {
     },
     setVaultPersonal: async (id, personal) =>
       void (await this.settings.update((s) => s.vaults.forEach((v) => { if (v.id === id) v.personal = !!personal; }))),
+    setVaultFeatures: async (id, hidden) => {
+      const clean = cleanFeatureIds(hidden);
+      await this.settings.update((s) => s.vaults.forEach((v) => {
+        if (v.id !== id) return;
+        if (clean.length) v.hiddenFeatures = clean;
+        else delete v.hiddenFeatures;
+      }));
+    },
     removeVault: async (id) => {
       await this.settings.update((s) => {
         s.vaults = s.vaults.filter((v) => v.id !== id);

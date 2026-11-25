@@ -18,18 +18,22 @@ function greeting(): string {
 }
 
 export function TodayView() {
-  const { data, settings, vault, openCard, reload, dialogs, go } = useWorkspace();
+  const { data, settings, vault, openCard, reload, dialogs, go, enabled } = useWorkspace();
   if (!data) return <div className="page-scroll" />;
-  const { boards } = data;
+  const boardsOn = enabled('boards');
+  const timeOffOn = enabled('time-off');
+  // with boards turned off, Today shows no cards at all
+  const boards = boardsOn ? data.boards : [];
+  const cards = boardsOn ? data.cards : [];
   const me = settings.userName;
-  const open = data.cards.filter((c) => !isDoneCard(boards, c));
+  const open = cards.filter((c) => !isDoneCard(boards, c));
   const mine = open.filter((c) => c.assignee === me);
   const days = (c: Card) => (c.due ? daysUntil(c.due) : null);
   const overdue = mine.filter((c) => (days(c) ?? 1) < 0).sort(byDue);
   const thisWeek = mine.filter((c) => { const d = days(c); return d !== null && d >= 0 && d <= 7; }).sort(byDue);
   const later = mine.filter((c) => { const d = days(c); return d === null || d > 7; }).sort(byDue);
   const blocked = open.filter((c) => isBlockedColumn(columnOf(boards, c)?.name ?? ''));
-  const doneThisWeek = data.cards.filter((c) => isDoneCard(boards, c) && Date.parse(c.updated) >= Date.now() - WEEK_MS);
+  const doneThisWeek = cards.filter((c) => isDoneCard(boards, c) && Date.parse(c.updated) >= Date.now() - WEEK_MS);
   // "now": my card furthest along (not in the first column, not blocked), soonest due first
   const now = mine
     .filter((c) => { const b = boards.find((x) => x.id === c.board); return b && b.columns[0]?.id !== c.status && !isBlockedColumn(columnOf(boards, c)?.name ?? ''); })
@@ -53,28 +57,30 @@ export function TodayView() {
         <header className="today-head">
           <p className="today-date">{today}</p>
           <h1>{greeting()}{me ? `, ${firstName(me)}` : ''}</h1>
-          {me
+          {!boardsOn
+            ? null
+            : me
             ? <p className="today-summary">{summary.length ? `You have ${summary.join(' and ')}.` : 'Nothing is due this week.'}{blocked.length ? ` ${plural(blocked.length, 'card is', 'cards are')} blocked in the team.` : ''}</p>
             : <p className="today-summary">Add your name to see the cards assigned to you. <button className="link" onClick={dialogs.setName}>Set your name</button></p>}
         </header>
 
         {now && <NowPanel card={now} boards={boards} onOpen={() => openCard(now.board, now.id)} onDone={() => void markDone(now)} />}
 
-        <div className="today-grid">
-          <section className="panel">
+        {(boardsOn || timeOffOn) && <div className={'today-grid' + (boardsOn ? '' : ' single')}>
+          {boardsOn && <section className="panel">
             <header className="panel-head"><h2>Your work</h2><span className="count">{mine.length}</span></header>
             {mine.length === 0 && <p className="empty-state small">No open cards assigned to you.</p>}
             <CardGroup title="Overdue" tone="danger" cards={overdue} boards={boards} onOpen={openCard} />
             <CardGroup title="This week" cards={thisWeek} boards={boards} onOpen={openCard} />
             <CardGroup title="Later" cards={later} boards={boards} onOpen={openCard} />
-          </section>
+          </section>}
           <section className="panel">
             <header className="panel-head"><h2>Team</h2></header>
-            <OutThisWeek onOpen={() => go({ kind: 'time-off' })} />
-            <CardGroup title="Blocked" tone="warn" cards={blocked} boards={boards} onOpen={openCard} showAssignee empty="Nothing is blocked." />
-            <CardGroup title="Done in the last 7 days" tone="ok" cards={doneThisWeek} boards={boards} onOpen={openCard} showAssignee empty="Nothing finished yet this week." />
+            {timeOffOn && <OutThisWeek onOpen={() => go({ kind: 'time-off' })} />}
+            {boardsOn && <CardGroup title="Blocked" tone="warn" cards={blocked} boards={boards} onOpen={openCard} showAssignee empty="Nothing is blocked." />}
+            {boardsOn && <CardGroup title="Done in the last 7 days" tone="ok" cards={doneThisWeek} boards={boards} onOpen={openCard} showAssignee empty="Nothing finished yet this week." />}
           </section>
-        </div>
+        </div>}
       </div>
     </div>
   );

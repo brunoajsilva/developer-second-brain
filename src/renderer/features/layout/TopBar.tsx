@@ -39,9 +39,11 @@ export function TopBar({ crumbs, canGoBack, canGoForward, onBack, onForward, new
       </nav>
       <div className="topbar-right no-drag">
         {right}
-        <button className="btn primary small" onClick={(e) => setMenu(anchorFrom(e.currentTarget, 'end'))}>
-          <PlusIcon size={15} />New<ChevronDownIcon size={14} />
-        </button>
+        {newEntries.length > 0 && (
+          <button className="btn primary small" onClick={(e) => setMenu(anchorFrom(e.currentTarget, 'end'))}>
+            <PlusIcon size={15} />New<ChevronDownIcon size={14} />
+          </button>
+        )}
       </div>
       <AnimatePresence>{menu && <Menu anchor={menu} entries={newEntries} onClose={() => setMenu(null)} />}</AnimatePresence>
     </header>

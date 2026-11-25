@@ -42,4 +42,24 @@ describe('AppService', () => {
     await expect(fs.stat(path.join(legacy, '_vault.md'))).resolves.toBeTruthy();
     expect(await s.invoke('listBoards', ['aaaa1111'])).toMatchObject({ ok: true, value: [{ name: 'B', columns: [{ id: 'x', name: 'X' }] }] });
   });
+
+  it('keeps the features hidden per vault in the local settings, and survives reopening the folder', async () => {
+    const { s, dir } = await service();
+    const a = (await s.invoke('createVault', ['A', dir, false])) as { ok: true; value: { id: string; path: string } };
+    const b = (await s.invoke('createVault', ['B', dir, false])) as { ok: true; value: { id: string } };
+    expect(await s.invoke('setVaultFeatures', [a.value.id, ['boards', 'tool:jwt', 'boards', '', 42]])).toMatchObject({ ok: true });
+    const vaults = (await s.invoke('listVaults', [])) as { ok: true; value: { id: string; hiddenFeatures?: string[] }[] };
+    expect(vaults.value.find((v) => v.id === a.value.id)?.hiddenFeatures).toEqual(['boards', 'tool:jwt']);
+    expect(vaults.value.find((v) => v.id === b.value.id)?.hiddenFeatures).toBeUndefined();
+    // nothing is written into the vault itself
+    expect(await fs.readFile(path.join(a.value.path, '_vault.md'), 'utf8')).not.toContain('boards');
+
+    await s.invoke('openFolder', [a.value.path]);
+    const again = (await s.invoke('getSettings', [])) as { ok: true; value: { vaults: { id: string; hiddenFeatures?: string[] }[] } };
+    expect(again.value.vaults.find((v) => v.id === a.value.id)?.hiddenFeatures).toEqual(['boards', 'tool:jwt']);
+
+    await s.invoke('setVaultFeatures', [a.value.id, []]);
+    const cleared = (await s.invoke('getSettings', [])) as { ok: true; value: { vaults: { id: string; hiddenFeatures?: string[] }[] } };
+    expect(cleared.value.vaults.find((v) => v.id === a.value.id)).not.toHaveProperty('hiddenFeatures');
+  });
 });

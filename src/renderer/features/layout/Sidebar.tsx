@@ -15,6 +15,7 @@ import { UpdateAlert } from '../updates/UpdateAlert';
 import { describeCheck, useUpdateStatus } from '../updates/useUpdateStatus';
 import { TOOLS } from '../tools/registry';
 import { outOn, todayIso } from '../time-off/calendar';
+import { toolFeature } from '../../app/features';
 import type { View } from '../../app/navigation';
 
 interface SidebarProps {
@@ -31,7 +32,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, onOpenVault, onEditCollection, openCountByBoard, collections, myOpenCount }: SidebarProps) {
-  const { vault, vaults, data, settings, go, dialogs } = useWorkspace();
+  const { vault, vaults, data, settings, go, dialogs, enabled } = useWorkspace();
+  const tools = TOOLS.filter((t) => enabled(toolFeature(t.id)));
   const [menu, setMenu] = useState<{ anchor: MenuAnchor & { align?: 'start' | 'end'; side?: 'below' | 'above' }; entries: MenuEntry[] } | null>(null);
   const activeDocs = view.kind === 'docs' ? view.collection : null;
   const update = useUpdateStatus();
@@ -56,6 +58,7 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
     entries: [
       { label: <>Signed as <b>{settings.userName || 'nobody'}</b></>, icon: <UserIcon size={15} />, onSelect: dialogs.setName },
       { label: 'Team', icon: <TeamIcon size={15} />, onSelect: dialogs.team },
+      { label: 'Settings', icon: <SettingsIcon size={15} />, hint: shortcut('mod+,'), onSelect: dialogs.settings },
       { separator: true },
       { label: 'Search', icon: <SearchIcon size={15} />, hint: shortcut('mod+K'), onSelect: onSearch },
       { label: 'Collapse sidebar', icon: <SidebarIcon size={15} />, hint: shortcut('mod+\\'), onSelect: onToggle },
@@ -84,20 +87,22 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
           <NavItem icon={<TodayIcon size={17} />} label="Today" count={myOpenCount} active={view.kind === 'today'} collapsed={collapsed} onClick={() => go({ kind: 'today' })} />
         </NavGroup>
 
-        <NavGroup title="Team" collapsed={collapsed} onAdd={dialogs.team} addLabel="Manage team">
-          <NavItem icon={<PeopleIcon size={17} />} label="People" active={view.kind === 'people'} collapsed={collapsed} onClick={() => go({ kind: 'people' })} />
-          <NavItem icon={<CalendarIcon size={17} />} label="Time off" count={outOn(data?.timeOff ?? [], todayIso()).length} active={view.kind === 'time-off'} collapsed={collapsed} onClick={() => go({ kind: 'time-off' })} />
-        </NavGroup>
+        {(enabled('people') || enabled('time-off')) && (
+          <NavGroup title="Team" collapsed={collapsed} onAdd={dialogs.team} addLabel="Manage team">
+            {enabled('people') && <NavItem icon={<PeopleIcon size={17} />} label="People" active={view.kind === 'people'} collapsed={collapsed} onClick={() => go({ kind: 'people' })} />}
+            {enabled('time-off') && <NavItem icon={<CalendarIcon size={17} />} label="Time off" count={outOn(data?.timeOff ?? [], todayIso()).length} active={view.kind === 'time-off'} collapsed={collapsed} onClick={() => go({ kind: 'time-off' })} />}
+          </NavGroup>
+        )}
 
-        <NavGroup title="Boards" collapsed={collapsed} onAdd={dialogs.newBoard} addLabel="New board">
+        {enabled('boards') && <NavGroup title="Boards" collapsed={collapsed} onAdd={dialogs.newBoard} addLabel="New board">
           {(data?.boards ?? []).map((b) => (
             <NavItem key={b.id} icon={<BoardIcon size={17} />} label={b.name} count={openCountByBoard.get(b.id) ?? 0} collapsed={collapsed}
               active={view.kind === 'board' && view.boardId === b.id} onClick={() => go({ kind: 'board', boardId: b.id })} />
           ))}
           {data && data.boards.length === 0 && !collapsed && <button className="nav-empty" onClick={dialogs.newBoard}>Create your first board</button>}
-        </NavGroup>
+        </NavGroup>}
 
-        <NavGroup title="Docs" collapsed={collapsed} onAdd={dialogs.newCollection} addLabel="New collection">
+        {enabled('docs') && <NavGroup title="Docs" collapsed={collapsed} onAdd={dialogs.newCollection} addLabel="New collection">
           {collections.map(([name, count]) => (
             <NavItem key={name || '#loose'} icon={name ? <CollectionIcon size={17} /> : <InboxIcon size={17} />} label={name || 'Loose pages'} count={count} collapsed={collapsed}
               active={activeDocs === name} onClick={() => go({ kind: 'docs', collection: name, path: null })}
@@ -109,13 +114,13 @@ export function Sidebar({ view, collapsed, onToggle, onSearch, onSwitchVault, on
               })} />
           ))}
           {data && collections.length === 0 && !collapsed && <button className="nav-empty" onClick={dialogs.newCollection}>Create your first collection</button>}
-        </NavGroup>
+        </NavGroup>}
 
-        <NavGroup title="Tools" collapsed={collapsed}>
-          {TOOLS.map((t) => (
+        {tools.length > 0 && <NavGroup title="Tools" collapsed={collapsed}>
+          {tools.map((t) => (
             <NavItem key={t.id} icon={t.icon} label={t.name} collapsed={collapsed} active={view.kind === 'tool' && view.toolId === t.id} onClick={() => go({ kind: 'tool', toolId: t.id })} />
           ))}
-        </NavGroup>
+        </NavGroup>}
       </div>
 
       <UpdateAlert status={update} collapsed={collapsed} />

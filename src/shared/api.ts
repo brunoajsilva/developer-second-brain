@@ -26,6 +26,8 @@ export interface Api {
   openFolder(folder: string): Promise<OpenFolderResult>;
   convertFolder(folder: string, name: string, personal: boolean): Promise<VaultInfo>;
   setVaultPersonal(vaultId: string, personal: boolean): Promise<void>;
+  /** Features hidden in this vault, for this person only. Everything not listed is shown. */
+  setVaultFeatures(vaultId: string, hidden: string[]): Promise<void>;
   removeVault(vaultId: string): Promise<void>;
   locateVault(vaultId: string, folder: string): Promise<VaultInfo>;
   revealInFolder(vaultId: string, relativePath: string): Promise<void>;
